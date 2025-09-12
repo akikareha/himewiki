@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
+<link ref="shortcut icon" href="/icon.png?a=static" />
+<title>All - {{.SiteName}}</title>
+</head>
+<body>
+
+<div>
+<a href="/"><img src="/logo.png?a=static" border="0" alt="{{.SiteName}}" /></a>
+<a href="/">Back</a>
+</div>
+
+<h1>All</h1>
+
+<ul>
+{{range .Pages}}
+<li><a href="/{{.Escaped}}">{{.Raw}}</a></li>
+{{else}}
+<li>No pages yet.</li>
+{{end}}
+</ul>
+
+</body>
+</html>

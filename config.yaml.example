@@ -1,0 +1,15 @@
+app:
+  mode: "devel"
+  addr: ":8080"
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "hime"
+  password: "SuperStrongPassw0rd"
+  name: "himewiki"
+  sslmode: "disable"
+
+site:
+  name: "HimeWiki"
+  front: "FrontPage"

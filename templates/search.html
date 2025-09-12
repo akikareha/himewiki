@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow" />
+<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
+<link ref="shortcut icon" href="/icon.png?a=static" />
+<title>Search - {{.SiteName}}</title>
+</head>
+<body>
+
+<h1>Search</h1>
+
+Name Search
+<form action="/?a=search" method="GET">
+<input type="hidden" name="a" value="search" />
+<input type="hidden" name="t" value="name" />
+<input type="text" name="w" value="{{.Word}}">
+<input type="submit" value="Go">
+</form>
+
+Content Search
+<form action="/" method="GET">
+<input type="hidden" name="a" value="search" />
+<input type="hidden" name="t" value="content" />
+<input type="text" name="w" value="{{.Word}}" />
+<input type="submit" value="Go" />
+</form>
+
+<div>
+<a href="/"><img src="/logo.png?a=static" border="0" alt="{{.SiteName}}" /></a>
+<a href="/">Back</a>
+<a href="/?a=all">All</a>
+</div>
+
+{{if .Word}}
+<h2>Results for "{{.Word}}"</h2>
+<ul>
+{{range .Results}}
+<li><a href="/{{. | urlquery}}">{{.}}</a></li>
+{{else}}
+<li>No results found.</li>
+{{end}}
+</ul>
+{{end}}
+
+</body>
+</html>

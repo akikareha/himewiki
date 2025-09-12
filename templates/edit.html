@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
+<link ref="shortcut icon" href="/icon.png?a=static" />
+<title>Edit - {{.Name}} - {{.SiteName}}</title>
+</head>
+<body>
+
+<h1>Edit - {{.Name}}</h1>
+
+<form action="/{{.Escaped}}?a=edit" method="POST">
+<input type="hidden" name="previewed" value="{{.Previewed}}" />
+<textarea name="content" rows="12" cols="64">{{.Text}}</textarea><br>
+<input type="submit" name="preview" value="Preview" />
+{{if .Previewed}}
+<input type="submit" name="save" value="Save" />
+{{end}}
+</form>
+
+<div>
+<a href="/"><img src="/logo.png?a=static" border="0" alt="{{.SiteName}}" /></a>
+<a href="/{{.Escaped}}">Cancel</a>
+</div>
+
+{{if .Previewed}}
+<h1><a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Name}}</a></h1>
+
+<div>{{.Rendered}}</div>
+{{end}}
+
+</body>
+</html>

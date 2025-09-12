@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
+<link ref="shortcut icon" href="/icon.png?a=static" />
+<title>Revisions - {{.Name}} - {{.SiteName}}</title>
+</head>
+<body>
+
+<div>
+<a href="/"><img src="/logo.png?a=static" border="0" alt="{{.SiteName}}" /></a>
+<a href="/{{.Escaped}}">Current</a>
+</div>
+
+<h1>Revisions - {{.Name}}</h1>
+
+<ul>
+{{range .Revisions}}
+<li>
+<form action="/{{.Escaped}}" method="GET">
+<input type="hidden" name="a" value="rev" />
+<input type="hidden" name="i" value="{{.ID}}" />
+<input type="submit" value="View" />
+</form>
+<pre>{{.Diff}}</pre>
+</li>
+{{else}}
+<li>No revisions found.</li>
+{{end}}
+</ul>
+
+</body>
+</html>

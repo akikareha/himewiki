@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
+<link ref="shortcut icon" href="/icon.png?a=static" />
+<title>{{.Name}} - {{.SiteName}}</title>
+</head>
+<body>
+
+<div>
+<a href="/"><img src="/logo.png?a=static" border="0" alt="{{.SiteName}}" /></a>
+<a href="/{{.Escaped}}?a=edit">Edit</a>
+<a href="/{{.Escaped}}?a=revs">Rev.</a>
+<a href="/?a=search">Search</a>
+<a href="/?a=all">All</a>
+</div>
+
+<h1><a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Name}}</a></h1>
+
+<div>{{.Rendered}}</div>
+
+</body>
+</html>

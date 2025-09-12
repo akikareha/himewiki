@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
+<link ref="shortcut icon" href="/icon.png?a=static" />
+<title>Old Revision - {{.Name}} - {{.SiteName}}</title>
+</head>
+<body>
+
+<div>
+<a href="/"><img src="/logo.png?a=static" border="0" alt="{{.SiteName}}" /></a>
+<a href="/{{.Escaped}}">Current</a>
+<a href="/{{.Escaped}}?a=revs">Rev.</a>
+</div>
+
+<h1>Old Revision - <a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Name}}</a></h1>
+
+<div>{{.Rendered}}</div>
+
+<form action="/{{.Escaped}}?a=revert&i={{.ID}}" method="POST">
+<input type="submit" name="revert" value="Revert" />
+</form>
+
+</body>
+</html>
