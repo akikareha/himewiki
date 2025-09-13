@@ -13,3 +13,9 @@ database:
 site:
   name: "HimeWiki"
   front: "FrontPage"
+
+filter:
+  agent: "ChatGPT"
+  key: "(Your OpenAPI Key Here)"
+  system: "You are a text filter for a wiki engine. Clean up, normalize, and lightly rewrite if needed."
+  prompt: ""

@@ -8,6 +8,7 @@ import (
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
+	"github.com/akikareha/himewiki/internal/filter"
 	"github.com/akikareha/himewiki/internal/format"
 )
 
@@ -61,7 +62,18 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		save = r.FormValue("save")
 	}
 
-	normalized, rendered := render(content)
+	var filtered string
+	var err error
+	if previewed && save != "" {
+		filtered, err = filter.Apply(cfg, content)
+	} else {
+		filtered, err = content, nil
+	}
+	if err != nil {
+		http.Error(w, "Failed to filter content", http.StatusInternalServerError)
+		return
+	}
+	normalized, rendered := render(filtered)
 
 	if previewed && save != "" {
 		if err := data.Save(params.Name, normalized); err != nil {

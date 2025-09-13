@@ -14,11 +14,11 @@ type Config struct {
 	} `yaml:"app"`
 
 	Database struct {
-		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
-		User     string `yaml:"user"`
+		Host string `yaml:"host"`
+		Port int    `yaml:"port"`
+		User string `yaml:"user"`
 		Password string `yaml:"password"`
-		Name     string `yaml:"name"`
+		Name string `yaml:"name"`
 		SSLMode  string `yaml:"sslmode"`
 	} `yaml:"database"`
 
@@ -26,6 +26,13 @@ type Config struct {
 		Name string `yaml:"name"`
 		Front string `yaml:"front"`
 	} `yaml:"site"`
+
+	Filter struct {
+		Agent string `yaml:"agent"`
+		Key string `yaml:"key"`
+		System string `yaml:"system"`
+		Prompt string `yaml:"prompt"`
+	}
 }
 
 func Load(path string) *Config {
