@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"html/template"
 	"net/url"
+	"path"
+	"path/filepath"
+
+	"github.com/akikareha/himewiki/internal/config"
 )
 
 type blockMode int
@@ -111,7 +115,7 @@ func ignore(s *state) bool {
 	return false
 }
 
-func strong(s *state) bool {
+func strong(cfg *config.Config, s *state) bool {
 	line := s.data[s.index:s.lineEnd]
 	if !bytes.HasPrefix(line, []byte("**")) {
 		return false
@@ -146,7 +150,7 @@ func strong(s *state) bool {
 	}
 	s.index += 2
 
-	markup(s)
+	markup(cfg, s)
 
 	if s.innerDeco == decoStrong {
 		s.html.WriteString("</strong>")
@@ -167,7 +171,7 @@ func strong(s *state) bool {
 	return true
 }
 
-func em(s *state) bool {
+func em(cfg *config.Config, s *state) bool {
 	line := s.data[s.index:s.lineEnd]
 	if !bytes.HasPrefix(line, []byte("//")) {
 		return false
@@ -202,7 +206,7 @@ func em(s *state) bool {
 	}
 	s.index += 2
 
-	markup(s)
+	markup(cfg, s)
 
 	if s.innerDeco == decoEm {
 		s.html.WriteString("</em>")
@@ -334,7 +338,7 @@ func spaceIndex(b []byte) int {
 	return len(b)
 }
 
-func link(s *state) bool {
+func link(cfg *config.Config, s *state) bool {
 	line := s.data[s.index:s.lineEnd]
 	if !bytes.HasPrefix(line, []byte("https:")) {
 		return false
@@ -347,10 +351,36 @@ func link(s *state) bool {
 		return false
 	}
 
+	filename := path.Base(u.Path)
+	ext := filepath.Ext(filename)
+	extFound := false
+	for _, extension := range cfg.Image.Extensions {
+		if ext == "." + extension {
+			extFound = true
+			break
+		}
+	}
+	if extFound {
+		domainFound := false
+		for _, domain := range cfg.Image.Domains {
+			if u.Host == domain {
+				domainFound = true
+				break
+			}
+		}
+		if !domainFound {
+			return false
+		}
+	}
+
 	checked := u.String()
 	s.text.WriteString(checked)
 	htmlURL := template.HTMLEscapeString(checked)
-	s.html.WriteString("<a href=\"" + htmlURL + "\" class=\"link\">" + htmlURL + "</a>")
+	if extFound {
+		s.html.WriteString("<img src=\"" + htmlURL + "\" alt=\"" + htmlURL + "\" />")
+	} else {
+		s.html.WriteString("<a href=\"" + htmlURL + "\" class=\"link\">" + htmlURL + "</a>")
+	}
 
 	s.index += len(rawURL)
 	return true
@@ -399,19 +429,19 @@ func isBlank(b []byte) bool {
 	return true
 }
 
-func markup(s *state) {
+func markup(cfg *config.Config, s *state) {
 	for s.index < s.lineEnd {
 		if ignore(s) {
 			continue
-		} else if strong(s) {
+		} else if strong(cfg, s) {
 			continue
-		} else if em(s) {
+		} else if em(cfg, s) {
 			continue
 		} else if camel(s) {
 			continue
 		} else if wikiLink(s) {
 			continue
-		} else if link(s) {
+		} else if link(cfg, s) {
 			continue
 		} else if html(s) {
 			continue
@@ -423,8 +453,8 @@ func markup(s *state) {
 	}
 }
 
-func nomarkLine(s *state) {
-	markup(s)
+func nomarkLine(cfg *config.Config, s *state) {
+	markup(cfg, s)
 	nextLine(s)
 	skipEnd(s)
 	if s.index < len(s.data) {
@@ -436,7 +466,7 @@ func nomarkLine(s *state) {
 	}
 }
 
-func Nomark(text string) (string, string) {
+func Nomark(cfg *config.Config, text string) (string, string) {
 	d := []byte(text)
 	s := state {
 		data: d,
@@ -474,7 +504,7 @@ func Nomark(text string) (string, string) {
 			}
 		} else {
 			s.prevLine = line
-			nomarkLine(&s)
+			nomarkLine(cfg, &s)
 		}
 	}
 	blockEnd(&s)

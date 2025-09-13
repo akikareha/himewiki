@@ -27,6 +27,11 @@ type Config struct {
 		Front string `yaml:"front"`
 	} `yaml:"site"`
 
+	Image struct {
+		Domains []string `yaml:"domains"`
+		Extensions []string `yaml:"extensions"`
+	} `yaml:"image"`
+
 	Filter struct {
 		Agent string `yaml:"agent"`
 		Key string `yaml:"key"`

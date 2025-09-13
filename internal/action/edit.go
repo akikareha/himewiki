@@ -12,13 +12,13 @@ import (
 	"github.com/akikareha/himewiki/internal/format"
 )
 
-func render(text string) (string, string) {
+func render(cfg *config.Config, text string) (string, string) {
 	if strings.HasPrefix(text, "=") {
-		return format.Creole(text)
+		return format.Creole(cfg, text)
 	} else if strings.HasPrefix(text, "#") {
-		return format.Markdown(text)
+		return format.Markdown(cfg, text)
 	} else {
-		return format.Nomark(text)
+		return format.Nomark(cfg, text)
 	}
 }
 
@@ -31,7 +31,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 
 	tmpl := template.Must(template.ParseFiles("templates/view.html"))
 	escaped := url.PathEscape(params.Name)
-	_, rendered := render(content)
+	_, rendered := render(cfg, content)
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
@@ -73,7 +73,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		http.Error(w, "Failed to filter content", http.StatusInternalServerError)
 		return
 	}
-	normalized, rendered := render(filtered)
+	normalized, rendered := render(cfg, filtered)
 
 	if previewed && save != "" {
 		if err := data.Save(params.Name, normalized); err != nil {
