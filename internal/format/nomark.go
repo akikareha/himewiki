@@ -31,6 +31,7 @@ type state struct {
 	lineEnd int
 	outerDeco decoMode
 	innerDeco decoMode
+	prevLine []byte
 }
 
 func skip(s *state) {
@@ -447,6 +448,7 @@ func Nomark(text string) (string, string) {
 		lineEnd: 0,
 		outerDeco: decoNone,
 		innerDeco: decoNone,
+		prevLine: d[0:0],
 	}
 
 	skip(&s)
@@ -456,6 +458,9 @@ func Nomark(text string) (string, string) {
 		line := s.data[s.index:s.lineEnd]
 		if isBlank(line) {
 			blockEnd(&s)
+			if string(s.prevLine) == "----" {
+				s.html.WriteString("<hr />\n")
+			}
 			blockBegin(&s, blockParagraph)
 			for s.index < len(s.data) {
 				nextLine(&s)
@@ -468,6 +473,7 @@ func Nomark(text string) (string, string) {
 				}
 			}
 		} else {
+			s.prevLine = line
 			nomarkLine(&s)
 		}
 	}
