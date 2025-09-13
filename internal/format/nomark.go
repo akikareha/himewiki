@@ -222,6 +222,89 @@ func em(s *state) bool {
 	return true
 }
 
+func camel(s *state) bool {
+	if s.index > 0 {
+		c := s.data[s.index - 1]
+		if c >= 'A' && c <= 'Z' {
+			return false
+		}
+		if c >= 'a' && c <= 'z' {
+			return false
+		}
+		if c >= '0' && c <= '9' {
+			return false
+		}
+	}
+	line := s.data[s.index:s.lineEnd]
+	if len(line) < 3 {
+		return false
+	}
+	c := line[0]
+	if c < 'A' || c > 'Z' {
+		return false
+	}
+	c = line[1]
+	if c < 'a' || c > 'z' {
+		return false
+	}
+	i := 2
+	for i < len(line) {
+		c = line[i]
+		if c < 'a' || c > 'z' {
+			if c < 'A' || c > 'Z' {
+				return false
+			}
+			i += 1
+			break
+		}
+		i += 1
+	}
+	upper := true
+	for i < len(line) {
+		c = line[i]
+		if c >= '0' && c <='9' {
+			i += 1
+			for i < len(line) {
+				c = line[i]
+				if c >= 'A' && c <= 'Z' {
+					return false
+				}
+				if c >= 'a' && c <= 'z' {
+					return false
+				}
+				if c < '0' || c > '9' {
+					break
+				}
+				i += 1
+			}
+			break
+		}
+		if upper {
+			if c >= 'A' && c <= 'Z' {
+				return false
+			} else if c < 'a' || c > 'z' {
+				break
+			}
+			upper = false
+			i += 1
+		} else {
+			if c >= 'A' && c <= 'Z' {
+				upper = true
+			} else if c < 'a' || c > 'z' {
+				break
+			}
+			i += 1
+		}
+	}
+	name := string(line[:i])
+
+	s.text.WriteString(name)
+	s.html.WriteString("<a href=\"/" + url.PathEscape(name) + "\" class=\"link\">" + template.HTMLEscapeString(name) + "</a>")
+
+	s.index += len(name)
+	return true
+}
+
 func wikiLink(s *state) bool {
 	line := s.data[s.index:s.lineEnd]
 	if !bytes.HasPrefix(line, []byte("[[")) {
@@ -322,6 +405,8 @@ func markup(s *state) {
 		} else if strong(s) {
 			continue
 		} else if em(s) {
+			continue
+		} else if camel(s) {
 			continue
 		} else if wikiLink(s) {
 			continue
