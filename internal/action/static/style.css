@@ -1,3 +1,22 @@
 body {
-	background-image: url(/tile.png?a=static)
+	background-image: url(/tile.png?a=static);
+}
+
+.link {
+	font-size: 1.125em;
+}
+
+.markup {
+	color: #5c7;
+	font-size: 0.5em;
+}
+
+strong {
+	color: #e52;
+	font-size: 1.125em;
+}
+
+em {
+	color: #25e;
+	font-size: 1.125em;
 }

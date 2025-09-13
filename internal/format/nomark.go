@@ -13,6 +13,14 @@ const (
 	blockParagraph
 )
 
+type decoMode int
+
+const (
+	decoNone decoMode = iota
+	decoStrong
+	decoEm
+)
+
 type state struct {
 	data []byte
 	index int
@@ -21,6 +29,8 @@ type state struct {
 	block blockMode
 	nextLine int
 	lineEnd int
+	outerDeco decoMode
+	innerDeco decoMode
 }
 
 func skip(s *state) {
@@ -100,6 +110,118 @@ func ignore(s *state) bool {
 	return false
 }
 
+func strong(s *state) bool {
+	line := s.data[s.index:s.lineEnd]
+	if !bytes.HasPrefix(line, []byte("**")) {
+		return false
+	}
+
+	if s.innerDeco == decoStrong {
+		s.text.WriteString("**")
+		s.html.WriteString("</strong><span class=\"markup\">**</span>")
+		s.innerDeco = decoNone
+		s.index += 2
+		return true
+	}
+
+	if s.outerDeco == decoStrong {
+		if s.innerDeco == decoEm {
+			s.html.WriteString("</em>")
+			s.innerDeco = decoNone
+		}
+		s.text.WriteString("**")
+		s.html.WriteString("</strong><span class=\"markup\">**</span>")
+		s.outerDeco = decoNone
+		s.index += 2
+		return true
+	}
+
+	s.text.WriteString("**")
+	s.html.WriteString("<span class=\"markup\">**</span><strong>")
+	if s.outerDeco == decoNone {
+		s.outerDeco = decoStrong
+	} else {
+		s.innerDeco = decoStrong
+	}
+	s.index += 2
+
+	markup(s)
+
+	if s.innerDeco == decoStrong {
+		s.html.WriteString("</strong>")
+		s.innerDeco = decoNone
+		return true
+	}
+
+	if s.outerDeco == decoStrong {
+		if s.innerDeco == decoEm {
+			s.html.WriteString("</em>")
+			s.innerDeco = decoNone
+		}
+		s.html.WriteString("</strong>")
+		s.outerDeco = decoNone
+		return true
+	}
+
+	return true
+}
+
+func em(s *state) bool {
+	line := s.data[s.index:s.lineEnd]
+	if !bytes.HasPrefix(line, []byte("//")) {
+		return false
+	}
+
+	if s.innerDeco == decoEm {
+		s.text.WriteString("//")
+		s.html.WriteString("</em><span class=\"markup\">//</span>")
+		s.innerDeco = decoNone
+		s.index += 2
+		return true
+	}
+
+	if s.outerDeco == decoEm {
+		if s.innerDeco == decoStrong {
+			s.html.WriteString("</strong>")
+			s.innerDeco = decoNone
+		}
+		s.text.WriteString("//")
+		s.html.WriteString("</em><span class=\"markup\">//</span>")
+		s.outerDeco = decoNone
+		s.index += 2
+		return true
+	}
+
+	s.text.WriteString("//")
+	s.html.WriteString("<span class=\"markup\">//</span><em>")
+	if s.outerDeco == decoNone {
+		s.outerDeco = decoEm
+	} else {
+		s.innerDeco = decoEm
+	}
+	s.index += 2
+
+	markup(s)
+
+	if s.innerDeco == decoEm {
+		s.html.WriteString("</em>")
+		s.innerDeco = decoNone
+		return true
+	}
+
+	if s.outerDeco == decoEm {
+		if s.innerDeco == decoStrong {
+			s.html.WriteString("</strong>")
+			s.innerDeco = decoNone
+		}
+		s.html.WriteString("</em>")
+		s.outerDeco = decoNone
+		return true
+	}
+
+	return true
+}
+
 func wikiLink(s *state) bool {
 	line := s.data[s.index:s.lineEnd]
 	if !bytes.HasPrefix(line, []byte("[[")) {
@@ -112,7 +234,7 @@ func wikiLink(s *state) bool {
 	name := string(line[2:2 + ket])
 
 	s.text.WriteString("[[" + name + "]]")
-	s.html.WriteString("<a href=\"/" + url.PathEscape(name) + "\">" + template.HTMLEscapeString(name) + "</a>")
+	s.html.WriteString("<span class=\"markup\">[[</span><a href=\"/" + url.PathEscape(name) + "\" class=\"link\">" + template.HTMLEscapeString(name) + "</a><span class=\"markup\">]]</span>")
 
 	s.index += 2 + ket + 2
 	return true
@@ -144,7 +266,7 @@ func link(s *state) bool {
 	checked := u.String()
 	s.text.WriteString(checked)
 	htmlURL := template.HTMLEscapeString(checked)
-	s.html.WriteString("<a href=\"" + htmlURL + "\">" + htmlURL + "</a>")
+	s.html.WriteString("<a href=\"" + htmlURL + "\" class=\"link\">" + htmlURL + "</a>")
 
 	s.index += len(rawURL)
 	return true
@@ -193,9 +315,13 @@ func isBlank(b []byte) bool {
 	return true
 }
 
-func nomarkLine(s *state) {
+func markup(s *state) {
 	for s.index < s.lineEnd {
 		if ignore(s) {
+			continue
+		} else if strong(s) {
+			continue
+		} else if em(s) {
 			continue
 		} else if wikiLink(s) {
 			continue
@@ -209,6 +335,10 @@ func nomarkLine(s *state) {
 			panic("program error")
 		}
 	}
+}
+
+func nomarkLine(s *state) {
+	markup(s)
 	nextLine(s)
 	skipEnd(s)
 	if s.index < len(s.data) {
@@ -230,6 +360,8 @@ func Nomark(text string) (string, string) {
 		block: blockNone,
 		nextLine: 0,
 		lineEnd: 0,
+		outerDeco: decoNone,
+		innerDeco: decoNone,
 	}
 
 	skip(&s)
