@@ -1,6 +1,5 @@
 package format
 
-func Markdown(text string) string {
-	// TODO
-	return escapeHTML("(Markdown)\n" + text)
+func Markdown(text string) (string, string) {
+	return Nomark(text) // TODO
 }

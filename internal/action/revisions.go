@@ -66,7 +66,7 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 
 	tmpl := template.Must(template.ParseFiles("templates/revision.html"))
 	escaped := url.PathEscape(params.Name)
-	rendered := render(content)
+	_, rendered := render(content)
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string

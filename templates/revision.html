@@ -17,7 +17,9 @@
 
 <h1>Old Revision - <a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Name}}</a></h1>
 
-<div>{{.Rendered}}</div>
+<div>
+{{.Rendered}}
+</div>
 
 <form action="/{{.Escaped}}?a=revert&i={{.ID}}" method="POST">
 <input type="submit" name="revert" value="Revert" />

@@ -11,7 +11,7 @@ import (
 	"github.com/akikareha/himewiki/internal/format"
 )
 
-func render(text string) string {
+func render(text string) (string, string) {
 	if strings.HasPrefix(text, "=") {
 		return format.Creole(text)
 	} else if strings.HasPrefix(text, "#") {
@@ -30,7 +30,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 
 	tmpl := template.Must(template.ParseFiles("templates/view.html"))
 	escaped := url.PathEscape(params.Name)
-	rendered := render(content)
+	_, rendered := render(content)
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
@@ -47,32 +47,35 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
 	var previewed bool
 	var content string
+	var preview string
+	var save string
 	if r.Method != http.MethodPost {
 		previewed = false
 		content, _ = data.Load(params.Name)
+		preview = ""
+		save = ""
 	} else {
 		previewed = r.FormValue("previewed") == "true"
 		content = r.FormValue("content")
-		preview := r.FormValue("preview")
-		save := r.FormValue("save")
-		if previewed && save != "" {
-			if err := data.Save(params.Name, content); err != nil {
-				http.Error(w, "Failed to save", http.StatusInternalServerError)
-				return
-			}
-			http.Redirect(w, r, "/"+url.PathEscape(params.Name), http.StatusFound)
-			return
-		} else if preview != "" {
-			previewed = true
-		} else {
-			http.Error(w, "Invalid state", http.StatusInternalServerError)
+		preview = r.FormValue("preview")
+		save = r.FormValue("save")
+	}
+
+	normalized, rendered := render(content)
+
+	if previewed && save != "" {
+		if err := data.Save(params.Name, normalized); err != nil {
+			http.Error(w, "Failed to save", http.StatusInternalServerError)
 			return
 		}
+		http.Redirect(w, r, "/"+url.PathEscape(params.Name), http.StatusFound)
+		return
+	} else if preview != "" {
+		previewed = true
 	}
 
 	tmpl := template.Must(template.ParseFiles("templates/edit.html"))
 	escaped := url.PathEscape(params.Name)
-	rendered := render(content)
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
@@ -84,7 +87,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
 		Escaped: escaped,
-		Text: content,
+		Text: normalized,
 		Rendered: template.HTML(rendered),
 		Previewed: previewed,
 	})

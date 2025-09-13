@@ -1,6 +1,5 @@
 package format
 
-func Creole(text string) string {
-	// TODO
-	return escapeHTML("(Creole)\n" + text)
+func Creole(text string) (string, string) {
+	return Nomark(text) // TODO
 }
