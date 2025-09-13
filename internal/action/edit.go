@@ -65,7 +65,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	var filtered string
 	var err error
 	if previewed && save != "" {
-		filtered, err = filter.Apply(cfg, content)
+		filtered, err = filter.Apply(cfg, params.Name, content)
 	} else {
 		filtered, err = content, nil
 	}
