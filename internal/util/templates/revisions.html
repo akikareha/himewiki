@@ -24,7 +24,7 @@
 <input type="hidden" name="i" value="{{.ID}}" />
 <input type="submit" value="View" />
 </form>
-<pre>{{.DiffHTML}}</pre>
+<pre>{{.Diff | fmtdiff}}</pre>
 </li>
 {{else}}
 <li>No revisions found.</li>

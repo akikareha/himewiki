@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"log"
 	"strings"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/akikareha/himewiki/internal/config"
-	"github.com/akikareha/himewiki/internal/format"
 )
 
 var db *pgxpool.Pool
@@ -166,7 +164,6 @@ type Revision struct {
 	Name string
 	Diff string
 	CreatedAt time.Time
-	DiffHTML template.HTML
 }
 
 func LoadRevisions(name string) ([]Revision, error) {
@@ -186,7 +183,6 @@ func LoadRevisions(name string) ([]Revision, error) {
 		if err := rows.Scan(&r.ID, &r.Name, &r.Diff, &r.CreatedAt); err != nil {
 			return nil, err
 		}
-		r.DiffHTML = template.HTML(format.Diff(r.Diff))
 		revs = append(revs, r)
 	}
 	return revs, nil
