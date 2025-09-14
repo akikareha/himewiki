@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"log"
 	"net/url"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/akikareha/himewiki/internal/config"
+	"github.com/akikareha/himewiki/internal/format"
 )
 
 var db *pgxpool.Pool
@@ -168,11 +170,12 @@ func LoadAll() ([]Name, error) {
 }
 
 type Revision struct {
-	ID        int
-	Name      string
-	Diff      string
+	ID int
+	Name string
+	Diff string
 	CreatedAt time.Time
-	Escaped   string
+	Escaped string
+	DiffHTML template.HTML
 }
 
 func LoadRevisions(name string) ([]Revision, error) {
@@ -193,6 +196,7 @@ func LoadRevisions(name string) ([]Revision, error) {
 			return nil, err
 		}
 		r.Escaped = url.PathEscape(r.Name)
+		r.DiffHTML = template.HTML(format.Diff(r.Diff))
 		revs = append(revs, r)
 	}
 	return revs, nil

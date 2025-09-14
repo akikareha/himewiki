@@ -20,3 +20,21 @@ em {
 	color: #25e;
 	font-size: 1.125em;
 }
+
+.plus {
+	color: #8cf;
+	font-size: 1.125em;
+}
+
+.plus-line {
+	color: #36f;
+}
+
+.minus {
+	color: #fc8;
+	font-size: 1.125em;
+}
+
+.minus-line {
+	color: #f63;
+}
