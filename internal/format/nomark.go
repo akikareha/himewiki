@@ -15,6 +15,7 @@ type blockMode int
 const (
 	blockNone blockMode = iota
 	blockParagraph
+	blockRaw
 )
 
 type decoMode int
@@ -81,17 +82,34 @@ func nextLine(s *state) {
 		if end > 0 && s.data[end - 1] == '\r' {
 			end -= 1
 		}
+		for end > 0 {
+			c := s.data[end - 1]
+			if c != ' ' && c != '\t' {
+				break
+			}
+			end -= 1
+		}
 		s.lineEnd = end
 	}
 }
 
-func blockEnd(s *state) {
-	if s.block == blockParagraph {
+func blockEnd(s *state, block blockMode) {
+	if block == blockNone {
 		s.text.WriteString("\n")
+	}
+	if s.block == blockParagraph {
 		s.html.WriteString("\n</p>")
-		skip(s)
+		if block != blockRaw {
+			skip(s)
+		}
 		if s.index < len(s.data) {
 			s.text.WriteString("\n")
+			s.html.WriteString("\n")
+		}
+	} else if s.block == blockRaw {
+		s.html.WriteString("</pre>")
+		skip(s)
+		if s.index < len(s.data) {
 			s.html.WriteString("\n")
 		}
 	}
@@ -99,9 +117,13 @@ func blockEnd(s *state) {
 }
 
 func blockBegin(s *state, block blockMode) {
-	blockEnd(s)
+	blockEnd(s, block)
 	if block == blockParagraph {
+		s.text.WriteString("\n")
 		s.html.WriteString("<p>\n")
+	} else if block == blockRaw {
+		s.text.WriteString("\n")
+		s.html.WriteString("<pre>")
 	}
 	s.block = block
 }
@@ -454,6 +476,23 @@ func markup(cfg *config.Config, s *state) {
 }
 
 func nomarkLine(cfg *config.Config, s *state) {
+	if s.block == blockRaw {
+		line := string(s.data[s.index:s.lineEnd])
+		s.text.WriteString(line + "\n")
+		s.html.WriteString("\n" + template.HTMLEscapeString(line))
+		nextLine(s)
+		return
+	}
+
+	{
+		line := string(s.data[s.index:s.lineEnd])
+		if line == "{{{" {
+			s.text.WriteString("{{{")
+			s.html.WriteString("<span class=\"markup\">{{{</span><br />\n")
+			nextLine(s)
+			return
+		}
+	}
 	markup(cfg, s)
 	nextLine(s)
 	skipEnd(s)
@@ -486,8 +525,15 @@ func Nomark(cfg *config.Config, text string) (string, string) {
 	nextLine(&s)
 	for s.index < len(s.data) {
 		line := s.data[s.index:s.lineEnd]
-		if isBlank(line) {
-			blockEnd(&s)
+		if s.block != blockRaw && isBlank(line) {
+			if string(s.prevLine) == "{{{" {
+				blockEnd(&s, blockRaw)
+				nextLine(&s)
+				blockBegin(&s, blockRaw)
+				continue
+			}
+
+			blockEnd(&s, blockParagraph)
 			if string(s.prevLine) == "----" {
 				s.html.WriteString("<hr />\n")
 			}
@@ -502,12 +548,18 @@ func Nomark(cfg *config.Config, text string) (string, string) {
 					break
 				}
 			}
+		} else if s.block == blockRaw && string(s.prevLine) == "" && string(line) == "}}}" {
+			s.text.WriteString("}}}")
+			blockEnd(&s, blockParagraph)
+			nextLine(&s)
+			blockBegin(&s, blockParagraph)
+			s.html.WriteString("<span class=\"markup\">}}}</span><br />\n")
 		} else {
 			s.prevLine = line
 			nomarkLine(cfg, &s)
 		}
 	}
-	blockEnd(&s)
+	blockEnd(&s, blockNone)
 
 	return s.text.String(), s.html.String()
 }
