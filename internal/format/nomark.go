@@ -37,6 +37,7 @@ type state struct {
 	outerDeco decoMode
 	innerDeco decoMode
 	prevLine []byte
+	firstRaw bool
 }
 
 func skip(s *state) {
@@ -107,7 +108,7 @@ func blockEnd(s *state, block blockMode) {
 			s.html.WriteString("\n")
 		}
 	} else if s.block == blockRaw {
-		s.html.WriteString("</pre>")
+		s.html.WriteString("</code></pre>")
 		skip(s)
 		if s.index < len(s.data) {
 			s.html.WriteString("\n")
@@ -123,7 +124,7 @@ func blockBegin(s *state, block blockMode) {
 		s.html.WriteString("<p>\n")
 	} else if block == blockRaw {
 		s.text.WriteString("\n")
-		s.html.WriteString("<pre>")
+		s.html.WriteString("<pre><code>")
 	}
 	s.block = block
 }
@@ -479,7 +480,12 @@ func nomarkLine(cfg *config.Config, s *state) {
 	if s.block == blockRaw {
 		line := string(s.data[s.index:s.lineEnd])
 		s.text.WriteString(line + "\n")
-		s.html.WriteString("\n" + template.HTMLEscapeString(line))
+		if s.firstRaw {
+			s.html.WriteString(template.HTMLEscapeString(line))
+			s.firstRaw = false
+		} else {
+			s.html.WriteString("\n" + template.HTMLEscapeString(line))
+		}
 		nextLine(s)
 		return
 	}
@@ -488,7 +494,7 @@ func nomarkLine(cfg *config.Config, s *state) {
 		line := string(s.data[s.index:s.lineEnd])
 		if line == "{{{" {
 			s.text.WriteString("{{{")
-			s.html.WriteString("<span class=\"markup\">{{{</span><br />\n")
+			s.html.WriteString("<span class=\"markup\">{{{</span>")
 			nextLine(s)
 			return
 		}
@@ -518,6 +524,7 @@ func Nomark(cfg *config.Config, text string) (string, string) {
 		outerDeco: decoNone,
 		innerDeco: decoNone,
 		prevLine: d[0:0],
+		firstRaw: false,
 	}
 
 	skip(&s)
@@ -530,6 +537,7 @@ func Nomark(cfg *config.Config, text string) (string, string) {
 				blockEnd(&s, blockRaw)
 				nextLine(&s)
 				blockBegin(&s, blockRaw)
+				s.firstRaw = true
 				continue
 			}
 
