@@ -4,23 +4,24 @@
 <meta charset="UTF-8" />
 <link rel="stylesheet" type="text/css" href="/style.css?a=static" />
 <link rel="icon" type="image/png" href="/icon.png?a=static" />
-<title>{{.Name}} - {{.SiteName}}</title>
+<title>All - {{.SiteName}}</title>
 </head>
 <body>
 
 <div>
 <a href="/"><img src="/logo.png?a=static" border="0" alt="{{.SiteName}}" /></a>
-<a href="/{{.Escaped}}?a=edit">Edit</a>
-<a href="/{{.Escaped}}?a=revs">Rev.</a>
-<a href="/?a=search">Search</a>
-<a href="/?a=all">All</a>
+<a href="/">Back</a>
 </div>
 
-<h1><a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Name}}</a></h1>
+<h1>All</h1>
 
-<div>
-{{.Rendered}}
-</div>
+<ul>
+{{range .Pages}}
+<li><a href="/{{. | pathescape}}">{{.}}</a></li>
+{{else}}
+<li>No pages yet.</li>
+{{end}}
+</ul>
 
 </body>
 </html>

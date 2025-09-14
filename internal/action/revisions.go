@@ -7,6 +7,7 @@ import (
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
+	"github.com/akikareha/himewiki/internal/util"
 )
 
 func Revisions(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
@@ -16,17 +17,14 @@ func Revisions(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 		return
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/revisions.html"))
-	escaped := url.PathEscape(params.Name)
+	tmpl := util.NewTemplate("revisions.html")
 tmpl.Execute(w, struct {
 		SiteName string
 		Name string
-		Escaped string
 		Revisions []data.Revision
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
-		Escaped: escaped,
 		Revisions: revs,
 	})
 }
@@ -64,19 +62,16 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 	}
 
 
-	tmpl := template.Must(template.ParseFiles("templates/revision.html"))
-	escaped := url.PathEscape(params.Name)
+	tmpl := util.NewTemplate("revision.html")
 	_, rendered := render(cfg, content)
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
-		Escaped string
 		Rendered template.HTML
 		ID int
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
-		Escaped: escaped,
 		Rendered: template.HTML(rendered),
 		ID: *params.ID,
 	})

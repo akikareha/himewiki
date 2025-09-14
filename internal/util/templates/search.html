@@ -37,7 +37,7 @@ Content Search
 <h2>Results for "{{.Word}}"</h2>
 <ul>
 {{range .Results}}
-<li><a href="/{{. | urlquery}}">{{.}}</a></li>
+<li><a href="/{{. | pathescape}}">{{.}}</a></li>
 {{else}}
 <li>No results found.</li>
 {{end}}

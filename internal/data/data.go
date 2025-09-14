@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"net/url"
 	"strings"
 	"time"
 
@@ -143,12 +142,7 @@ func Save(name, newContent string) error {
 	return tx.Commit(ctx)
 }
 
-type Name struct {
-	Raw string
-	Escaped string
-}
-
-func LoadAll() ([]Name, error) {
+func LoadAll() ([]string, error) {
 	rows, err := db.Query(context.Background(),
 		"SELECT name FROM pages ORDER BY name")
 	if err != nil {
@@ -156,15 +150,13 @@ func LoadAll() ([]Name, error) {
 	}
 	defer rows.Close()
 
-	var results []Name
+	var results []string
 	for rows.Next() {
 		var name string
 		if err := rows.Scan(&name); err != nil {
 			return nil, err
 		}
-		escaped := url.PathEscape(name)
-		result := Name{ Raw: name, Escaped: escaped }
-		results = append(results, result)
+		results = append(results, name)
 	}
 	return results, nil
 }
@@ -174,7 +166,6 @@ type Revision struct {
 	Name string
 	Diff string
 	CreatedAt time.Time
-	Escaped string
 	DiffHTML template.HTML
 }
 
@@ -195,7 +186,6 @@ func LoadRevisions(name string) ([]Revision, error) {
 		if err := rows.Scan(&r.ID, &r.Name, &r.Diff, &r.CreatedAt); err != nil {
 			return nil, err
 		}
-		r.Escaped = url.PathEscape(r.Name)
 		r.DiffHTML = template.HTML(format.Diff(r.Diff))
 		revs = append(revs, r)
 	}

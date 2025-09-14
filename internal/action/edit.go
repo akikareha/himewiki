@@ -10,6 +10,7 @@ import (
 	"github.com/akikareha/himewiki/internal/data"
 	"github.com/akikareha/himewiki/internal/filter"
 	"github.com/akikareha/himewiki/internal/format"
+	"github.com/akikareha/himewiki/internal/util"
 )
 
 func render(cfg *config.Config, text string) (string, string) {
@@ -29,18 +30,15 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		return
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/view.html"))
-	escaped := url.PathEscape(params.Name)
+	tmpl := util.NewTemplate("view.html")
 	_, rendered := render(cfg, content)
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
-		Escaped string
 		Rendered template.HTML
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
-		Escaped: escaped,
 		Rendered: template.HTML(rendered),
 	})
 }
@@ -86,19 +84,16 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		previewed = true
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/edit.html"))
-	escaped := url.PathEscape(params.Name)
+	tmpl := util.NewTemplate("edit.html")
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
-		Escaped string
 		Text string
 		Rendered template.HTML 
 		Previewed bool
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
-		Escaped: escaped,
 		Text: normalized,
 		Rendered: template.HTML(rendered),
 		Previewed: previewed,
@@ -112,10 +107,10 @@ func All(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Par
 		return
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/all.html"))
+	tmpl := util.NewTemplate("all.html")
 	tmpl.Execute(w, struct {
 		SiteName string
-		Pages []data.Name
+		Pages []string
 	}{
 		SiteName: cfg.Site.Name,
 		Pages: pages,

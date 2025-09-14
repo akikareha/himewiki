@@ -11,7 +11,7 @@
 
 <h1>Edit - {{.Name}}</h1>
 
-<form action="/{{.Escaped}}?a=edit" method="POST">
+<form action="/{{.Name | pathescape}}?a=edit" method="POST">
 <input type="hidden" name="previewed" value="{{.Previewed}}" />
 <textarea name="content" rows="12" cols="64">{{.Text}}</textarea><br>
 <input type="submit" name="preview" value="Preview" />
@@ -22,7 +22,7 @@
 
 <div>
 <a href="/"><img src="/logo.png?a=static" border="0" alt="{{.SiteName}}" /></a>
-<a href="/{{.Escaped}}">Cancel</a>
+<a href="/{{.Name | pathescape}}">Cancel</a>
 </div>
 
 {{if .Previewed}}

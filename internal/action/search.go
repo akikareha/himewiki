@@ -1,11 +1,11 @@
 package action
 
 import (
-	"html/template"
 	"net/http"
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
+	"github.com/akikareha/himewiki/internal/util"
 )
 
 func Search(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
@@ -23,7 +23,7 @@ func Search(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		}
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/search.html"))
+	tmpl := util.NewTemplate("search.html")
 	tmpl.Execute(w, struct {
 		SiteName string
 		Word    string
