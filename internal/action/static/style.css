@@ -21,13 +21,17 @@ em {
 	font-size: 1.125em;
 }
 
+.hunk {
+	color: #36f;
+}
+
 .plus {
-	color: #8cf;
+	color: #8fc;
 	font-size: 1.125em;
 }
 
 .plus-line {
-	color: #36f;
+	color: #2c4;
 }
 
 .minus {

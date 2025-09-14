@@ -25,12 +25,19 @@ func Diff(text string) string {
 	data := []byte(text)
 	index := 0
 	var html bytes.Buffer
+	lineNo := 0
 
 	for index < len(data) {
 		lineEnd, nextLine := detectLine(data[index:])
 		lineEnd += index
 		nextLine += index
 		line := data[index:lineEnd]
+		lineNo += 1
+
+		if lineNo < 3 {
+			index = nextLine
+			continue
+		}
 
 		if len(line) < 1 {
 			html.WriteString("\n");
@@ -43,8 +50,11 @@ func Diff(text string) string {
 			} else if c == '-' {
 				html.WriteString("<span class=\"minus\">-</span>")
 				html.WriteString("<span class=\"minus-line\">" + htmlLine + "</span>\n")
+			} else if c == '@' {
+				html.WriteString("<span class=\"hunk\">@")
+				html.WriteString(htmlLine + "</span>\n")
 			} else {
-				html.WriteString("&nbsp;")
+				html.WriteByte(c)
 				html.WriteString(htmlLine + "\n")
 			}
 		}

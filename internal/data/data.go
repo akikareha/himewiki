@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pmezard/go-difflib/difflib"
 
 	"github.com/akikareha/himewiki/internal/config"
 )
@@ -74,42 +74,18 @@ func Load(name string) (int, string, error) {
 }
 
 func diff(oldText, newText string) string {
-	oldLines := strings.Split(oldText, "\n")
-	newLines := strings.Split(newText, "\n")
-
-	var result []string
-
-	max := len(oldLines)
-	if len(newLines) > max {
-		max = len(newLines)
+	diff := difflib.UnifiedDiff{
+		A: difflib.SplitLines(oldText),
+		B: difflib.SplitLines(newText),
+		FromFile: "old",
+		ToFile:  "new",
+		Context: 3,
 	}
-
-	for i := 0; i < max; i++ {
-		var oldLine, newLine string
-		if i < len(oldLines) {
-			oldLine = oldLines[i]
-		}
-		if i < len(newLines) {
-			newLine = newLines[i]
-		}
-
-		switch {
-		case oldLine == newLine:
-			result = append(result, " " + oldLine)
-		case oldLine == "":
-			result = append(result, "+" + newLine)
-		case newLine == "":
-			result = append(result, "-" + oldLine)
-		default:
-			result = append(result, "-" + oldLine)
-			result = append(result, "+" + newLine)
-		}
-	}
-
-	return strings.Join(result, "\n")
+	text, _ := difflib.GetUnifiedDiffString(diff)
+	return text
 }
 
-func Save(name, newContent string, baseRevID int) error {
+func Save(name, content string, baseRevID int) error {
 	ctx := context.Background()
 	tx, err := db.Begin(ctx)
 	if err != nil {
@@ -118,9 +94,8 @@ func Save(name, newContent string, baseRevID int) error {
 	defer tx.Rollback(ctx)
 
 	var currentRevID int
-	var oldContent string
-	err = tx.QueryRow(ctx, "SELECT revision_id, content FROM pages WHERE name=$1", name).
-		Scan(&currentRevID, &oldContent)
+	err = tx.QueryRow(ctx, "SELECT revision_id FROM pages WHERE name=$1", name).
+		Scan(&currentRevID)
 	if err != nil && err != pgx.ErrNoRows {
 		return err
 	}
@@ -129,14 +104,12 @@ func Save(name, newContent string, baseRevID int) error {
 		return fmt.Errorf("edit conflict")
 	}
 
-	diffText := diff(oldContent, newContent)
-
 	var newRevID int
 	err = tx.QueryRow(ctx,
-		`INSERT INTO revisions (name, content, diff, created_at)
-		 VALUES ($1, $2, $3, now())
+		`INSERT INTO revisions (name, content, created_at)
+		 VALUES ($1, $2, now())
 		 RETURNING id`,
-		name, newContent, diffText).Scan(&newRevID)
+		name, content).Scan(&newRevID)
 	if err != nil {
 		return err
 	}
@@ -148,7 +121,7 @@ func Save(name, newContent string, baseRevID int) error {
 		 SET content=EXCLUDED.content,
 		     revision_id=EXCLUDED.revision_id,
 		     updated_at=now()`,
-		name, newContent, newRevID)
+		name, content, newRevID)
 	if err != nil {
 		return err
 	}
@@ -178,13 +151,14 @@ func LoadAll() ([]string, error) {
 type Revision struct {
 	ID int
 	Name string
+	Content string
 	Diff string
 	CreatedAt time.Time
 }
 
 func LoadRevisions(name string) ([]Revision, error) {
 	rows, err := db.Query(context.Background(),
-		`SELECT id, name, diff, created_at
+		`SELECT id, name, content, created_at
 		 FROM revisions
 		 WHERE name=$1
 		 ORDER BY created_at DESC`, name)
@@ -196,10 +170,17 @@ func LoadRevisions(name string) ([]Revision, error) {
 	var revs []Revision
 	for rows.Next() {
 		var r Revision
-		if err := rows.Scan(&r.ID, &r.Name, &r.Diff, &r.CreatedAt); err != nil {
+		if err := rows.Scan(&r.ID, &r.Name, &r.Content, &r.CreatedAt); err != nil {
 			return nil, err
 		}
 		revs = append(revs, r)
+	}
+
+	for i := 0; i < len(revs) - 1; i++ {
+		revs[i].Diff = diff(revs[i + 1].Content, revs[i].Content)
+	}
+	if len(revs) > 0 {
+		revs[len(revs) - 1].Diff = diff("", revs[len(revs) - 1].Content)
 	}
 	return revs, nil
 }
