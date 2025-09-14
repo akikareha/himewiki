@@ -2,6 +2,10 @@ body {
 	background-image: url(/tile.png?a=static);
 }
 
+textarea {
+	width: 98%;
+}
+
 .link {
 	font-size: 1.125em;
 }
