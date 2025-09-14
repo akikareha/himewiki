@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/akikareha/himewiki/internal/config"
@@ -24,7 +25,7 @@ func render(cfg *config.Config, text string) (string, string) {
 }
 
 func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
-	content, err := data.Load(params.Name)
+	_, content, err := data.Load(params.Name)
 	if err != nil {
 		http.Redirect(w, r, "/"+url.PathEscape(params.Name)+"?a=edit", http.StatusFound)
 		return
@@ -45,16 +46,23 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 
 func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
 	var previewed bool
+	var revisionID int
 	var content string
 	var preview string
 	var save string
 	if r.Method != http.MethodPost {
 		previewed = false
-		content, _ = data.Load(params.Name)
+		revisionID, content, _ = data.Load(params.Name)
 		preview = ""
 		save = ""
 	} else {
 		previewed = r.FormValue("previewed") == "true"
+		var err error
+		revisionID, err = strconv.Atoi(r.FormValue("revision_id"))
+		if err != nil || revisionID < 0 {
+			http.Error(w, "Invalid revision ID", http.StatusInternalServerError)
+			return
+		}
 		content = r.FormValue("content")
 		preview = r.FormValue("preview")
 		save = r.FormValue("save")
@@ -74,7 +82,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	normalized, rendered := render(cfg, filtered)
 
 	if previewed && save != "" {
-		if err := data.Save(params.Name, normalized); err != nil {
+		if err := data.Save(params.Name, normalized, revisionID); err != nil {
 			http.Error(w, "Failed to save", http.StatusInternalServerError)
 			return
 		}
@@ -88,15 +96,17 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
+		Previewed bool
+		RevisionID int
 		Text string
 		Rendered template.HTML 
-		Previewed bool
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
+		Previewed: previewed,
+		RevisionID: revisionID,
 		Text: normalized,
 		Rendered: template.HTML(rendered),
-		Previewed: previewed,
 	})
 }
 

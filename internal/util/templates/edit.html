@@ -13,6 +13,7 @@
 
 <form action="/{{.Name | pathescape}}?a=edit" method="POST">
 <input type="hidden" name="previewed" value="{{.Previewed}}" />
+<input type="hidden" name="revision_id" value="{{.RevisionID}}" />
 <textarea name="content" rows="12" cols="64">{{.Text}}</textarea><br>
 <input type="submit" name="preview" value="Preview" />
 {{if .Previewed}}

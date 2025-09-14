@@ -2,8 +2,8 @@ package action
 
 import (
 	"net/http"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/akikareha/himewiki/internal/config"
 )

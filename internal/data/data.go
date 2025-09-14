@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/akikareha/himewiki/internal/config"
@@ -18,6 +19,7 @@ const createTablesSql = `
 CREATE TABLE IF NOT EXISTS pages (
 	name TEXT PRIMARY KEY,
 	content TEXT NOT NULL,
+	revision_id INT NOT NULL REFERENCES revisions(id),
 	updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
@@ -58,16 +60,17 @@ func Connect(cfg *config.Config) *pgxpool.Pool {
 	return db
 }
 
-func Load(name string) (string, error) {
+func Load(name string) (int, string, error) {
+	var id int
 	var content string
 	err := db.QueryRow(context.Background(),
-		"SELECT content FROM pages WHERE name=$1", name).
-		Scan(&content)
+		"SELECT revision_id, content FROM pages WHERE name=$1", name).
+		Scan(&id, &content)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 
-	return content, nil
+	return id, content, nil
 }
 
 func diff(oldText, newText string) string {
@@ -106,7 +109,7 @@ func diff(oldText, newText string) string {
 	return strings.Join(result, "\n")
 }
 
-func Save(name, newContent string) error {
+func Save(name, newContent string, baseRevID int) error {
 	ctx := context.Background()
 	tx, err := db.Begin(ctx)
 	if err != nil {
@@ -114,25 +117,38 @@ func Save(name, newContent string) error {
 	}
 	defer tx.Rollback(ctx)
 
+	var currentRevID int
 	var oldContent string
-	_ = tx.QueryRow(ctx, "SELECT content FROM pages WHERE name=$1", name).Scan(&oldContent)
+	err = tx.QueryRow(ctx, "SELECT revision_id, content FROM pages WHERE name=$1", name).
+		Scan(&currentRevID, &oldContent)
+	if err != nil && err != pgx.ErrNoRows {
+		return err
+	}
+
+	if currentRevID != 0 && currentRevID != baseRevID {
+		return fmt.Errorf("edit conflict")
+	}
 
 	diffText := diff(oldContent, newContent)
 
-	_, err = tx.Exec(ctx,
-		`INSERT INTO pages (name, content, updated_at)
-		 VALUES ($1, $2, now())
-		 ON CONFLICT (name) DO UPDATE
-		 SET content=EXCLUDED.content, updated_at=now()`,
-		name, newContent)
+	var newRevID int
+	err = tx.QueryRow(ctx,
+		`INSERT INTO revisions (name, content, diff, created_at)
+		 VALUES ($1, $2, $3, now())
+		 RETURNING id`,
+		name, newContent, diffText).Scan(&newRevID)
 	if err != nil {
 		return err
 	}
 
 	_, err = tx.Exec(ctx,
-		`INSERT INTO revisions (name, content, diff, created_at)
-		 VALUES ($1, $2, $3, now())`,
-		name, newContent, diffText)
+		`INSERT INTO pages (name, content, revision_id, updated_at)
+		 VALUES ($1, $2, $3, now())
+		 ON CONFLICT (name) DO UPDATE
+		 SET content=EXCLUDED.content,
+		     revision_id=EXCLUDED.revision_id,
+		     updated_at=now()`,
+		name, newContent, newRevID)
 	if err != nil {
 		return err
 	}
@@ -198,8 +214,8 @@ func Revert(name string, revID int) error {
 	}
 
 	_, err = db.Exec(context.Background(),
-		"UPDATE pages SET content=$1, updated_at=now() WHERE name=$2",
-		content, name)
+		"UPDATE pages SET content=$1, revision_id=$2, updated_at=now() WHERE name=$3",
+		content, revID, name)
 
 	return err
 }
