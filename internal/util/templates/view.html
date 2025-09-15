@@ -12,6 +12,10 @@
 <script>MathJax = { options: { processHtmlClass: 'mathjax', ignoreHtmlClass: '.*' } };</script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
 <title>{{.Name}} - {{.SiteName}}</title>
+<meta property="og:title" content="{{.Name}} - {{.SiteName}}" />
+<meta property="og:description" content="{{.Summary}}" />
+<meta property="og:image" content="{{.Card}}" />
+<meta property="og:url" content="{{.Base}}{{.Name | pathescape}}" />
 </head>
 <body>
 

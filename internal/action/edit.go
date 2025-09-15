@@ -14,13 +14,40 @@ import (
 	"github.com/akikareha/himewiki/internal/util"
 )
 
-func render(cfg *config.Config, text string) (string, string) {
+func render(cfg *config.Config, text string) (string, string, string) {
 	if strings.HasPrefix(text, "=") {
 		return format.Creole(cfg, text)
 	} else if strings.HasPrefix(text, "#") {
 		return format.Markdown(cfg, text)
 	} else {
 		return format.Nomark(cfg, text)
+	}
+}
+
+func summarize(s string, n int) string {
+	if n < 2 {
+		panic("n is too small")
+	}
+
+	var b strings.Builder
+	long := false
+	i := 0
+	for _, r := range(s) {
+		if i >= n - 2 {
+			long = true
+			break
+		}
+		if r == '\r' || r == '\n' || r == '\t' {
+			r = ' '
+		}
+		b.WriteRune(r)
+		i += 1
+	}
+
+	if long {
+		return b.String() + ".."
+	} else {
+		return b.String()
 	}
 }
 
@@ -32,14 +59,21 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	}
 
 	tmpl := util.NewTemplate("view.html")
-	_, rendered := render(cfg, content)
+	_, plain, rendered := render(cfg, content)
+	summary := summarize(plain, 144)
 	tmpl.Execute(w, struct {
+		Base string
 		SiteName string
+		Card string
 		Name string
+		Summary string
 		Rendered template.HTML
 	}{
+		Base: cfg.Site.Base,
 		SiteName: cfg.Site.Name,
+		Card: cfg.Site.Card,
 		Name: params.Name,
+		Summary: summary,
 		Rendered: template.HTML(rendered),
 	})
 }
@@ -79,7 +113,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		http.Error(w, "Failed to filter content", http.StatusInternalServerError)
 		return
 	}
-	normalized, rendered := render(cfg, filtered)
+	normalized, _, rendered := render(cfg, filtered)
 
 	if previewed && save != "" {
 		if err := data.Save(params.Name, normalized, revisionID); err != nil {

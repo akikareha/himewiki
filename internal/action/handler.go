@@ -17,7 +17,7 @@ type Params struct {
 func parse(cfg *config.Config, r *http.Request) Params {
 	name := strings.TrimPrefix(r.URL.Path, "/")
 	if name == "" {
-	  name = cfg.Site.Front
+	  name = cfg.Wiki.Front
 	}
 
 	action := r.URL.Query().Get("a")

@@ -30,6 +30,7 @@ type state struct {
 	data []byte
 	index int
 	text *bytes.Buffer
+	plain *bytes.Buffer
 	html *bytes.Buffer
 	block blockMode
 	nextLine int
@@ -97,6 +98,7 @@ func nextLine(s *state) {
 func blockEnd(s *state, block blockMode) {
 	if block == blockNone {
 		s.text.WriteString("\n")
+		s.plain.WriteString("\n")
 	}
 	if s.block == blockParagraph {
 		s.html.WriteString("\n</p>")
@@ -105,6 +107,7 @@ func blockEnd(s *state, block blockMode) {
 		}
 		if s.index < len(s.data) {
 			s.text.WriteString("\n")
+			s.plain.WriteString("\n")
 			s.html.WriteString("\n")
 		}
 	} else if s.block == blockRaw {
@@ -121,9 +124,11 @@ func blockBegin(s *state, block blockMode) {
 	blockEnd(s, block)
 	if block == blockParagraph {
 		s.text.WriteString("\n")
+		s.plain.WriteString("\n")
 		s.html.WriteString("<p>\n")
 	} else if block == blockRaw {
 		s.text.WriteString("\n")
+		s.plain.WriteString("\n")
 		s.html.WriteString("<pre><code>")
 	}
 	s.block = block
@@ -151,6 +156,7 @@ func math(cfg *config.Config, s *state) bool {
 	text := s.data[s.index + 2:s.index + 2 + end]
 	html := template.HTMLEscapeString(string(text))
 	s.text.WriteString("%%" + string(text) + "%%")
+	s.plain.WriteString(string(text))
 	s.html.WriteString("<span class=\"markup\">%%</span>")
 	s.html.WriteString("<nomark-math class=\"mathjax\">\\(" + html + "\\)</nomark-math>")
 	s.html.WriteString("<span class=\"markup\">%%</span>")
@@ -348,6 +354,7 @@ func camel(s *state) bool {
 	name := string(line[:i])
 
 	s.text.WriteString(name)
+	s.plain.WriteString(name)
 	s.html.WriteString("<a href=\"/" + url.PathEscape(name) + "\" class=\"link\">" + template.HTMLEscapeString(name) + "</a>")
 
 	s.index += len(name)
@@ -366,6 +373,7 @@ func wikiLink(s *state) bool {
 	name := string(line[2:2 + ket])
 
 	s.text.WriteString("[[" + name + "]]")
+	s.plain.WriteString(name)
 	s.html.WriteString("<span class=\"markup\">[[</span><a href=\"/" + url.PathEscape(name) + "\" class=\"link\">" + template.HTMLEscapeString(name) + "</a><span class=\"markup\">]]</span>")
 
 	s.index += 2 + ket + 2
@@ -419,6 +427,7 @@ func link(cfg *config.Config, s *state) bool {
 
 	checked := u.String()
 	s.text.WriteString(checked)
+	s.plain.WriteString(checked)
 	htmlURL := template.HTMLEscapeString(checked)
 	if extFound {
 		s.html.WriteString("<img src=\"" + htmlURL + "\" alt=\"" + htmlURL + "\" />")
@@ -435,21 +444,25 @@ func html(s *state) bool {
 	if c == '&' {
 		s.index += 1
 		s.text.WriteString("&")
+		s.plain.WriteString("&")
 		s.html.WriteString("&amp;")
 		return true
 	} else if c == '<' {
 		s.index += 1
 		s.text.WriteString("<")
+		s.plain.WriteString("<")
 		s.html.WriteString("&lt;")
 		return true
 	} else if c == '>' {
 		s.index += 1
 		s.text.WriteString(">")
+		s.plain.WriteString(">")
 		s.html.WriteString("&gt;")
 		return true
 	} else if c == '"' {
 		s.index += 1
 		s.text.WriteString("\"")
+		s.plain.WriteString("\"")
 		s.html.WriteString("&quot;")
 		return true
 	}
@@ -460,6 +473,7 @@ func raw(s *state) bool {
 	c := s.data[s.index]
 	s.index += 1
 	s.text.WriteByte(c)
+	s.plain.WriteByte(c)
 	s.html.WriteByte(c)
 	return true
 }
@@ -534,12 +548,13 @@ func nomarkLine(cfg *config.Config, s *state) {
 	}
 }
 
-func Nomark(cfg *config.Config, text string) (string, string) {
+func Nomark(cfg *config.Config, text string) (string, string, string) {
 	d := []byte(text)
 	s := state {
 		data: d,
 		index: 0,
 		text: new(bytes.Buffer),
+		plain: new(bytes.Buffer),
 		html: new(bytes.Buffer),
 		block: blockNone,
 		nextLine: 0,
@@ -592,5 +607,5 @@ func Nomark(cfg *config.Config, text string) (string, string) {
 	}
 	blockEnd(&s, blockNone)
 
-	return s.text.String(), s.html.String()
+	return s.text.String(), s.plain.String(), s.html.String()
 }

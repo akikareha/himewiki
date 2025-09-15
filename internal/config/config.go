@@ -23,9 +23,14 @@ type Config struct {
 	} `yaml:"database"`
 
 	Site struct {
+		Base string `yaml:"base"`
 		Name string `yaml:"name"`
-		Front string `yaml:"front"`
+		Card string `yaml:"card"`
 	} `yaml:"site"`
+
+	Wiki struct {
+		Front string `yaml:"front"`
+	} `yaml:"wiki"`
 
 	Image struct {
 		Domains []string `yaml:"domains"`

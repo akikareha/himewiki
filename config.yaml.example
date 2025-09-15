@@ -11,7 +11,11 @@ database:
   sslmode: "disable"
 
 site:
+  base: "https://wiki.example.org/"
   name: "HimeWiki"
+  card: "https://icon.example.org/hime/card.png"
+
+wiki:
   front: "FrontPage"
 
 image:
