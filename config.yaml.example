@@ -16,8 +16,9 @@ site:
 
 image:
   domains:
+    - "wiki.example.org"
     - "icon.example.org"
-    - "image.example.org"
+    - "localhost"
   extensions:
     - "png"
     - "jpeg"

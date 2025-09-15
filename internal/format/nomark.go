@@ -138,6 +138,27 @@ func ignore(s *state) bool {
 	return false
 }
 
+func math(cfg *config.Config, s *state) bool {
+	line := s.data[s.index:s.lineEnd]
+	if !bytes.HasPrefix(line, []byte("%%")) {
+		return false
+	}
+	//end := bytes.Index(s.data[s.index + 2:) // XXX unsafe
+	end := bytes.Index(line[2:], []byte("%%"))
+	if end == -1 {
+		return false
+	}
+	text := s.data[s.index + 2:s.index + 2 + end]
+	html := template.HTMLEscapeString(string(text))
+	s.text.WriteString("%%" + string(text) + "%%")
+	s.html.WriteString("<span class=\"markup\">%%</span>")
+	s.html.WriteString("<nomark-math class=\"mathjax\">\\(" + html + "\\)</nomark-math>")
+	s.html.WriteString("<span class=\"markup\">%%</span>")
+
+	s.index += 2 + end + 2
+	return true
+}
+
 func strong(cfg *config.Config, s *state) bool {
 	line := s.data[s.index:s.lineEnd]
 	if !bytes.HasPrefix(line, []byte("**")) {
@@ -455,6 +476,8 @@ func isBlank(b []byte) bool {
 func markup(cfg *config.Config, s *state) {
 	for s.index < s.lineEnd {
 		if ignore(s) {
+			continue
+		} else if math(cfg, s) {
 			continue
 		} else if strong(cfg, s) {
 			continue
