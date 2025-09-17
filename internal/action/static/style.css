@@ -1,5 +1,26 @@
 body {
+	background: #eff;
 	background-image: url(/tile.png?a=static);
+}
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background: #100;
+		background-image: url(/tile-dark.png?a=static);
+		color: #bbb;
+	}
+	a:link {
+		color: #48c;
+	}
+	input, textarea {
+		background: #000;
+		color: #bbb;
+		border-color: #444;
+	}
+	.hljs {
+		background: #000;
+		color: #bbb;
+	}
 }
 
 textarea {

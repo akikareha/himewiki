@@ -30,7 +30,13 @@ Content Search
 </form>
 
 <div>
-<a href="/"><img src="/logo.png?a=static" border="0" alt="{{.SiteName}}" /></a>
+<a href="/">
+<picture>
+<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)">
+<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)">
+<img src="/logo.png?a=static" alt="{{.SiteName}}">
+</picture>
+</a>
 <a href="/">Back</a>
 <a href="/?a=all">All</a>
 </div>
