@@ -16,6 +16,7 @@ const (
 	blockNone blockMode = iota
 	blockParagraph
 	blockRaw
+	blockMath
 )
 
 type decoMode int
@@ -106,12 +107,23 @@ func blockEnd(s *state, block blockMode) {
 			skip(s)
 		}
 		if s.index < len(s.data) {
-			s.text.WriteString("\n")
-			s.plain.WriteString("\n")
+			if block != blockMath {
+				s.text.WriteString("\n")
+				s.plain.WriteString("\n")
+			}
 			s.html.WriteString("\n")
 		}
 	} else if s.block == blockRaw {
 		s.html.WriteString("</code></pre>")
+		skip(s)
+		if s.index < len(s.data) {
+			s.html.WriteString("\n")
+		}
+	} else if s.block == blockMath {
+		s.text.WriteString("%%%")
+		s.html.WriteString("\n\\]</nomark-math>\n")
+		s.html.WriteString("<span class=\"markup\">%%%</span>\n")
+		s.html.WriteString("</div>")
 		skip(s)
 		if s.index < len(s.data) {
 			s.html.WriteString("\n")
@@ -130,6 +142,11 @@ func blockBegin(s *state, block blockMode) {
 		s.text.WriteString("\n")
 		s.plain.WriteString("\n")
 		s.html.WriteString("<pre><code>")
+	} else if block == blockMath {
+		s.text.WriteString("%%%\n")
+		s.html.WriteString("<div>\n")
+		s.html.WriteString("<span class=\"markup\">%%%</span>\n")
+		s.html.WriteString("<nomark-math class=\"mathjax\">\\[")
 	}
 	s.block = block
 }
@@ -511,7 +528,7 @@ func markup(cfg *config.Config, s *state) {
 }
 
 func nomarkLine(cfg *config.Config, s *state) {
-	if s.block == blockRaw {
+	if s.block == blockRaw || s.block == blockMath {
 		line := string(s.data[s.index:s.lineEnd])
 		s.text.WriteString(line + "\n")
 		if s.firstRaw {
@@ -567,7 +584,7 @@ func Nomark(cfg *config.Config, text string) (string, string, string) {
 	nextLine(&s)
 	for s.index < len(s.data) {
 		line := s.data[s.index:s.lineEnd]
-		if s.block != blockRaw && isBlank(line) {
+		if s.block != blockRaw && s.block != blockMath && isBlank(line) {
 			if string(s.prevLine) == "{{{" {
 				blockEnd(&s, blockRaw)
 				nextLine(&s)
@@ -597,6 +614,14 @@ func Nomark(cfg *config.Config, text string) (string, string, string) {
 			nextLine(&s)
 			blockBegin(&s, blockParagraph)
 			s.html.WriteString("<span class=\"markup\">}}}</span><br />\n")
+		} else if s.block != blockMath && s.block != blockRaw && string(line) == "%%%" {
+			blockEnd(&s, blockMath)
+			nextLine(&s)
+			blockBegin(&s, blockMath)
+		} else if s.block == blockMath && string(line) == "%%%" {
+			blockEnd(&s, blockParagraph)
+			nextLine(&s)
+			blockBegin(&s, blockParagraph)
 		} else {
 			s.prevLine = line
 			nomarkLine(cfg, &s)
