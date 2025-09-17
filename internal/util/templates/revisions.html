@@ -24,18 +24,20 @@
 
 <h1>Revisions - {{.Name}}</h1>
 
-<ul>
 {{range .Revisions}}
-<li>
+<div><code>
+{{.Diff | fmtdiff}}
+</code></div>
 <form action="/{{.Name | pathescape}}" method="GET">
 <input type="hidden" name="a" value="rev" />
 <input type="hidden" name="i" value="{{.ID}}" />
 <input type="submit" value="View" />
 </form>
-<pre>{{.Diff | fmtdiff}}</pre>
-</li>
+<hr />
 {{else}}
-<li>No revisions found.</li>
+<div>
+No revisions found.
+</div>
 {{end}}
 </ul>
 

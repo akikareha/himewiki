@@ -40,22 +40,22 @@ func Diff(text string) string {
 		}
 
 		if len(line) < 1 {
-			html.WriteString("\n");
+			html.WriteString("<br />\n");
 		} else {
 			c := line[0]
 			htmlLine := template.HTMLEscapeString(string(line[1:]))
 			if c == '+' {
 				html.WriteString("<span class=\"plus\">+</span>")
-				html.WriteString("<span class=\"plus-line\">" + htmlLine + "</span>\n")
+				html.WriteString("<span class=\"plus-line\">" + htmlLine + "</span><br />\n")
 			} else if c == '-' {
 				html.WriteString("<span class=\"minus\">-</span>")
-				html.WriteString("<span class=\"minus-line\">" + htmlLine + "</span>\n")
+				html.WriteString("<span class=\"minus-line\">" + htmlLine + "</span><br />\n")
 			} else if c == '@' {
 				html.WriteString("<span class=\"hunk\">@")
-				html.WriteString(htmlLine + "</span>\n")
+				html.WriteString(htmlLine + "</span><br />\n")
 			} else {
 				html.WriteByte(c)
-				html.WriteString(htmlLine + "\n")
+				html.WriteString(htmlLine + "<br />\n")
 			}
 		}
 		index = nextLine
