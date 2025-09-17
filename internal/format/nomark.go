@@ -412,16 +412,13 @@ func link(cfg *config.Config, s *state) bool {
 			break
 		}
 	}
+	domainFound := false
 	if extFound {
-		domainFound := false
 		for _, domain := range cfg.Image.Domains {
 			if u.Host == domain {
 				domainFound = true
 				break
 			}
-		}
-		if !domainFound {
-			return false
 		}
 	}
 
@@ -429,7 +426,7 @@ func link(cfg *config.Config, s *state) bool {
 	s.text.WriteString(checked)
 	s.plain.WriteString(checked)
 	htmlURL := template.HTMLEscapeString(checked)
-	if extFound {
+	if extFound && domainFound {
 		s.html.WriteString("<img src=\"" + htmlURL + "\" alt=\"" + htmlURL + "\" />")
 	} else {
 		s.html.WriteString("<a href=\"" + htmlURL + "\" class=\"link\">" + htmlURL + "</a>")
