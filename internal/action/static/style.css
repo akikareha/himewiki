@@ -10,7 +10,10 @@ body {
 		color: #bbb;
 	}
 	a:link {
-		color: #48c;
+		color: #59d;
+	}
+	a:visited {
+		color: #95d;
 	}
 	input, textarea {
 		background: #000;
@@ -42,7 +45,7 @@ strong {
 }
 
 em {
-	color: #25e;
+	color: #48f;
 	font-size: 1.125em;
 }
 
