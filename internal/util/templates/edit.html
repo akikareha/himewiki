@@ -15,7 +15,14 @@
 <title>Edit - {{.Name}} - {{.SiteName}}</title>
 </head>
 <body>
-<a id="top"></a>
+
+{{if .Previewed}}
+<h1>Preview, Not Saved - <a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Name}}</a></h1>
+
+<div>
+{{.Rendered}}
+</div>
+{{end}}
 
 <h1>Edit - {{.Name}}</h1>
 
@@ -40,17 +47,5 @@
 <a href="/{{.Name | pathescape}}">Cancel</a>
 </div>
 
-{{if .Previewed}}
-<h1><a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Name}}</a></h1>
-
-<div>
-{{.Rendered}}
-</div>
-{{end}}
-
-<div>
-<br />
-<a href="#top">Top</a>
-</div>
 </body>
 </html>
