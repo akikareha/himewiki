@@ -593,7 +593,7 @@ func nomarkLine(cfg *config.Config, s *state) {
 	}
 }
 
-func Nomark(cfg *config.Config, title string, text string) (string, string, string, string) {
+func nomark(cfg *config.Config, title string, text string) (string, string, string, string) {
 	d := []byte(text)
 	s := state {
 		data: d,

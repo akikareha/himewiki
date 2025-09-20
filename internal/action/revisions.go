@@ -7,6 +7,7 @@ import (
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
+	"github.com/akikareha/himewiki/internal/format"
 	"github.com/akikareha/himewiki/internal/util"
 )
 
@@ -63,7 +64,7 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 
 
 	tmpl := util.NewTemplate("revision.html")
-	title, _, _, rendered := render(cfg, params.Name, content)
+	title, _, _, rendered := format.Apply(cfg, params.Name, content)
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
