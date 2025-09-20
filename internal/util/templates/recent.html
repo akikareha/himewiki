@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
+<link rel="icon" type="image/png" href="/icon.png?a=static" />
+<title>Recent Changes - {{.SiteName}}</title>
+</head>
+<body>
+
+<div>
+<a href="/">
+<picture>
+<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)">
+<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)">
+<img src="/logo.png?a=static" alt="{{.SiteName}}">
+</picture>
+</a>
+<a href="/">Back</a>
+</div>
+
+<h1>Recent Changes</h1>
+
+<ul>
+{{range .Pages}}
+<li><a href="/{{. | pathescape}}">{{.}}</a></li>
+{{else}}
+<li>No pages yet.</li>
+{{end}}
+</ul>
+
+<div>
+<br />
+<a href="/">
+<picture>
+<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)">
+<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)">
+<img src="/logo.png?a=static" alt="{{.SiteName}}">
+</picture>
+</a>
+<a href="/">Back</a>
+</div>
+
+</body>
+</html>

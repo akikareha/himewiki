@@ -44,6 +44,8 @@ func handle(cfg *config.Config, w http.ResponseWriter, r *http.Request) {
 		Edit(cfg, w, r, &params)
 	case "all":
 		All(cfg, w, r, &params)
+	case "recent":
+		Recent(cfg, w, r, &params)
 	case "revs":
 		Revisions(cfg, w, r, &params)
 	case "revert":

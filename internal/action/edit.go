@@ -126,3 +126,20 @@ func All(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Par
 		Pages: pages,
 	})
 }
+
+func Recent(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
+	pages, err := data.Recent()
+	if err != nil {
+		http.Error(w, "Failed to load pages", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl := util.NewTemplate("recent.html")
+	tmpl.Execute(w, struct {
+		SiteName string
+		Pages []string
+	}{
+		SiteName: cfg.Site.Name,
+		Pages: pages,
+	})
+}

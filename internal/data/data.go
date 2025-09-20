@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS revisions (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
 	content TEXT NOT NULL,
-	diff TEXT NOT NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
@@ -144,6 +143,25 @@ func Save(name, content string, baseRevID int) error {
 func LoadAll() ([]string, error) {
 	rows, err := db.Query(context.Background(),
 		"SELECT name FROM pages ORDER BY name")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		results = append(results, name)
+	}
+	return results, nil
+}
+
+func Recent() ([]string, error) {
+	rows, err := db.Query(context.Background(),
+		"SELECT name FROM pages ORDER BY updated_at DESC, name ASC")
 	if err != nil {
 		return nil, err
 	}
