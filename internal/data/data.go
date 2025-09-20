@@ -23,6 +23,17 @@ CREATE TABLE IF NOT EXISTS pages (
 	updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX IF NOT EXISTS idx_pages_name_trgm
+	ON pages USING gin (name gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_pages_content_trgm
+	ON pages USING gin (content gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_pages_updated_at
+	ON pages(updated_at DESC);
+
 CREATE TABLE IF NOT EXISTS revisions (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
@@ -30,6 +41,7 @@ CREATE TABLE IF NOT EXISTS revisions (
 	diff TEXT NOT NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT now()
 );
+
 CREATE INDEX IF NOT EXISTS idx_revisions_name_created_at
 	ON revisions (name, created_at DESC);
 `
