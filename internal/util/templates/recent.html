@@ -23,13 +23,14 @@
 
 <h1>Recent Changes</h1>
 
-<ul>
-{{range .Pages}}
-<li><a href="/{{. | pathescape}}">{{.}}</a></li>
+{{range .Records}}
+<h3><a href="/{{.Name | pathescape}}">{{.Name}}</a></h3>
+<div><code>
+{{.Diff | fmtdiff}}
+</code></div>
 {{else}}
-<li>No pages yet.</li>
+<p>No pages yet.</p>
 {{end}}
-</ul>
 
 <div>
 <br />

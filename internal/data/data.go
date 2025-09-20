@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -43,6 +44,9 @@ CREATE TABLE IF NOT EXISTS revisions (
 
 CREATE INDEX IF NOT EXISTS idx_revisions_name_created_at
 	ON revisions (name, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_revisions_name_id
+	ON revisions (name, id DESC);
 `
 
 func Connect(cfg *config.Config) *pgxpool.Pool {
@@ -159,21 +163,51 @@ func LoadAll() ([]string, error) {
 	return results, nil
 }
 
-func Recent() ([]string, error) {
+type RecentRecord struct {
+	Name string
+	Diff string
+}
+
+func Recent() ([]RecentRecord, error) {
 	rows, err := db.Query(context.Background(),
-		"SELECT name FROM pages ORDER BY updated_at DESC, name ASC")
+		`SELECT
+			p.name,
+			r1.content AS content,
+			r2.content AS prev_content
+		 FROM pages p
+		 JOIN revisions r1 ON r1.id = p.revision_id
+		 LEFT JOIN revisions r2
+			ON r2.name = p.name
+			AND r2.id = (
+				SELECT id
+				FROM revisions
+				WHERE name = p.name
+				AND id < p.revision_id
+				ORDER BY id DESC
+				LIMIT 1
+			)
+		 ORDER BY updated_at DESC, name ASC
+		`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var results []string
+	var results []RecentRecord
 	for rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
+		var name, content string
+		var prevContent sql.NullString
+		if err := rows.Scan(&name, &content, &prevContent); err != nil {
 			return nil, err
 		}
-		results = append(results, name)
+		var diffText string
+		if prevContent.Valid {
+			diffText = diff(prevContent.String, content)
+		} else {
+			diffText = diff("", content)
+		}
+		record := RecentRecord{ Name: name, Diff: diffText }
+		results = append(results, record)
 	}
 	return results, nil
 }
