@@ -63,15 +63,17 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 
 
 	tmpl := util.NewTemplate("revision.html")
-	_, _, rendered := render(cfg, content)
+	title, _, _, rendered := render(cfg, params.Name, content)
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
+		Title string
 		Rendered template.HTML
 		ID int
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
+		Title: title,
 		Rendered: template.HTML(rendered),
 		ID: *params.ID,
 	})

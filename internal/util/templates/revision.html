@@ -12,7 +12,7 @@
 <script>hljs.highlightAll();</script>
 <script>MathJax = { options: { processHtmlClass: 'mathjax', ignoreHtmlClass: '.*' } };</script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
-<title>Old Revision - {{.Name}} - {{.SiteName}}</title>
+<title>Old Revision - {{.Title}} - {{.SiteName}}</title>
 </head>
 <body>
 
@@ -28,7 +28,7 @@
 <a href="/{{.Name | pathescape}}?a=revs">Rev.</a>
 </div>
 
-<h1>Old Revision - <a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Name}}</a></h1>
+<h1>Old Revision - <a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Title}}</a></h1>
 
 <div>
 {{.Rendered}}

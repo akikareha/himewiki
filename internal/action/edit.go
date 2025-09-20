@@ -14,13 +14,13 @@ import (
 	"github.com/akikareha/himewiki/internal/util"
 )
 
-func render(cfg *config.Config, text string) (string, string, string) {
+func render(cfg *config.Config, title string, text string) (string, string, string, string) {
 	if strings.HasPrefix(text, "=") {
-		return format.Creole(cfg, text)
+		return format.Creole(cfg, title, text)
 	} else if strings.HasPrefix(text, "#") {
-		return format.Markdown(cfg, text)
+		return format.Markdown(cfg, title, text)
 	} else {
-		return format.Nomark(cfg, text)
+		return format.Nomark(cfg, title, text)
 	}
 }
 
@@ -59,7 +59,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	}
 
 	tmpl := util.NewTemplate("view.html")
-	_, plain, rendered := render(cfg, content)
+	title, _, plain, rendered := render(cfg, params.Name, content)
 	summary := summarize(plain, 144)
 	tmpl.Execute(w, struct {
 		Base string
@@ -67,6 +67,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Card string
 		Name string
 		Summary string
+		Title string
 		Rendered template.HTML
 	}{
 		Base: cfg.Site.Base,
@@ -74,6 +75,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Card: cfg.Site.Card,
 		Name: params.Name,
 		Summary: summary,
+		Title: title,
 		Rendered: template.HTML(rendered),
 	})
 }
@@ -113,7 +115,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		http.Error(w, "Failed to filter content", http.StatusInternalServerError)
 		return
 	}
-	normalized, _, rendered := render(cfg, filtered)
+	title, normalized, _, rendered := render(cfg, params.Name, filtered)
 
 	if previewed && save != "" {
 		if err := data.Save(params.Name, normalized, revisionID); err != nil {
@@ -133,6 +135,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Previewed bool
 		RevisionID int
 		Text string
+		Title string
 		Rendered template.HTML 
 	}{
 		SiteName: cfg.Site.Name,
@@ -140,6 +143,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Previewed: previewed,
 		RevisionID: revisionID,
 		Text: normalized,
+		Title: title,
 		Rendered: template.HTML(rendered),
 	})
 }

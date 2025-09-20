@@ -6,6 +6,8 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"regexp"
+	"strconv"
 
 	"github.com/akikareha/himewiki/internal/config"
 )
@@ -40,6 +42,7 @@ type state struct {
 	innerDeco decoMode
 	prevLine []byte
 	firstRaw bool
+	title string
 }
 
 func skip(s *state) {
@@ -97,10 +100,6 @@ func nextLine(s *state) {
 }
 
 func blockEnd(s *state, block blockMode) {
-	if block == blockNone {
-		s.text.WriteString("\n")
-		s.plain.WriteString("\n")
-	}
 	if s.block == blockParagraph {
 		s.html.WriteString("\n</p>")
 		if block != blockRaw {
@@ -134,7 +133,9 @@ func blockEnd(s *state, block blockMode) {
 
 func blockBegin(s *state, block blockMode) {
 	blockEnd(s, block)
-	if block == blockParagraph {
+	if block == blockNone {
+		// do nothing
+	} else if block == blockParagraph {
 		s.text.WriteString("\n")
 		s.plain.WriteString("\n")
 		s.html.WriteString("<p>\n")
@@ -501,6 +502,35 @@ func isBlank(b []byte) bool {
 	return true
 }
 
+var headingRe = regexp.MustCompile("^!!!(!*) (.+?) !!!(!*)$")
+
+func parseHeading(s *state, line string) (level int, title string, ok bool) {
+	if string(s.prevLine) != "" {
+		return 0, "", false
+	}
+
+	matches := headingRe.FindStringSubmatch(line)
+	if matches == nil {
+		return 0, "", false
+	}
+
+	prefix := matches[1]
+	title = matches[2]
+	suffix := matches[3]
+
+	if len(prefix) != len(suffix) {
+		return 0, "", false
+	}
+
+	level = 4 - len(prefix)
+
+	if level < 1 || level > 4 {
+		return 0, "", false
+	}
+
+	return level, title, true
+}
+
 func markup(cfg *config.Config, s *state) {
 	for s.index < s.lineEnd {
 		if ignore(s) {
@@ -550,6 +580,7 @@ func nomarkLine(cfg *config.Config, s *state) {
 			return
 		}
 	}
+
 	markup(cfg, s)
 	nextLine(s)
 	skipEnd(s)
@@ -562,7 +593,7 @@ func nomarkLine(cfg *config.Config, s *state) {
 	}
 }
 
-func Nomark(cfg *config.Config, text string) (string, string, string) {
+func Nomark(cfg *config.Config, title string, text string) (string, string, string, string) {
 	d := []byte(text)
 	s := state {
 		data: d,
@@ -577,13 +608,16 @@ func Nomark(cfg *config.Config, text string) (string, string, string) {
 		innerDeco: decoNone,
 		prevLine: d[0:0],
 		firstRaw: false,
+		title: "",
 	}
 
 	skip(&s)
 	blockBegin(&s, blockParagraph)
 	nextLine(&s)
+	var line []byte
 	for s.index < len(s.data) {
-		line := s.data[s.index:s.lineEnd]
+		s.prevLine = line
+		line = s.data[s.index:s.lineEnd]
 		if s.block != blockRaw && s.block != blockMath && isBlank(line) {
 			if string(s.prevLine) == "{{{" {
 				blockEnd(&s, blockRaw)
@@ -622,12 +656,35 @@ func Nomark(cfg *config.Config, text string) (string, string, string) {
 			blockEnd(&s, blockParagraph)
 			nextLine(&s)
 			blockBegin(&s, blockParagraph)
+		} else if level, title, ok := parseHeading(&s, string(line)); ok {
+			s.text.WriteString(string(line))
+			s.plain.WriteString(title)
+			if level == 1 && s.title == "" {
+				s.title = title
+				nextLine(&s)
+			} else {
+				blockEnd(&s, blockNone)
+				blockBegin(&s, blockNone)
+				titleHTML := template.HTMLEscapeString(title)
+				levelStr := strconv.Itoa(level)
+				var buf bytes.Buffer
+				buf.Write([]byte("!!!"))
+				for i := 0; i <= 3 - level; i += 1 {
+					buf.WriteByte('!')
+				}
+				mark := buf.String()
+				s.html.WriteString("<h" + levelStr + ">" + "<span class=\"markup\">" + mark + "</span> " + titleHTML + " <span class=\"markup\">" + mark + "</span>" + "</h" + levelStr + ">\n")
+				nextLine(&s)
+				blockBegin(&s, blockParagraph)
+			}
 		} else {
-			s.prevLine = line
 			nomarkLine(cfg, &s)
 		}
 	}
 	blockEnd(&s, blockNone)
 
-	return s.text.String(), s.plain.String(), s.html.String()
+	if s.title != "" {
+		title = s.title
+	}
+	return title, s.text.String(), s.plain.String(), s.html.String()
 }

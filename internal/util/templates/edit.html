@@ -12,19 +12,19 @@
 <script>hljs.highlightAll();</script>
 <script>MathJax = { options: { processHtmlClass: 'mathjax', ignoreHtmlClass: '.*' } };</script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
-<title>Edit - {{.Name}} - {{.SiteName}}</title>
+<title>Edit - {{.Title}} - {{.SiteName}}</title>
 </head>
 <body>
 
 {{if .Previewed}}
-<h1>Preview, Not Saved - <a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Name}}</a></h1>
+<h1>Preview, Not Saved - <a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Title}}</a></h1>
 
 <div>
 {{.Rendered}}
 </div>
 {{end}}
 
-<h1>Edit - {{.Name}}</h1>
+<h1>Edit - {{.Title}}</h1>
 
 <form action="/{{.Name | pathescape}}?a=edit" method="POST">
 <input type="hidden" name="previewed" value="{{.Previewed}}" />
