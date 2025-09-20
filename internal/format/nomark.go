@@ -119,7 +119,7 @@ func blockEnd(s *state, block blockMode) {
 			s.html.WriteString("\n")
 		}
 	} else if s.block == blockMath {
-		s.text.WriteString("%%%")
+		s.text.WriteString("%%%\n")
 		s.html.WriteString("\n\\]</nomark-math>\n")
 		s.html.WriteString("<span class=\"markup\">%%%</span>\n")
 		s.html.WriteString("</div>")
@@ -132,7 +132,6 @@ func blockEnd(s *state, block blockMode) {
 }
 
 func blockBegin(s *state, block blockMode) {
-	blockEnd(s, block)
 	if block == blockNone {
 		// do nothing
 	} else if block == blockParagraph {
@@ -144,12 +143,20 @@ func blockBegin(s *state, block blockMode) {
 		s.plain.WriteString("\n")
 		s.html.WriteString("<pre><code>")
 	} else if block == blockMath {
-		s.text.WriteString("%%%\n")
+		s.text.WriteString("\n%%%\n")
 		s.html.WriteString("<div>\n")
 		s.html.WriteString("<span class=\"markup\">%%%</span>\n")
 		s.html.WriteString("<nomark-math class=\"mathjax\">\\[")
 	}
 	s.block = block
+}
+
+func checkBlock(s *state, block blockMode) {
+	if s.block == block {
+		return
+	}
+	blockEnd(s, block)
+	blockBegin(s, block)
 }
 
 func ignore(s *state) bool {
@@ -558,15 +565,24 @@ func markup(cfg *config.Config, s *state) {
 }
 
 func nomarkLine(cfg *config.Config, s *state) {
-	if s.block == blockRaw || s.block == blockMath {
+	if s.block == blockRaw {
 		line := string(s.data[s.index:s.lineEnd])
-		s.text.WriteString(line + "\n")
 		if s.firstRaw {
+			s.text.WriteString(line)
 			s.html.WriteString(template.HTMLEscapeString(line))
 			s.firstRaw = false
 		} else {
+			s.text.WriteString("\n" + line)
 			s.html.WriteString("\n" + template.HTMLEscapeString(line))
 		}
+		nextLine(s)
+		return
+	}
+
+	if s.block == blockMath {
+		line := string(s.data[s.index:s.lineEnd])
+		s.text.WriteString(line + "\n")
+		s.html.WriteString("\n" + template.HTMLEscapeString(line))
 		nextLine(s)
 		return
 	}
@@ -581,12 +597,13 @@ func nomarkLine(cfg *config.Config, s *state) {
 		}
 	}
 
+	checkBlock(s, blockParagraph)
 	markup(cfg, s)
 	nextLine(s)
 	skipEnd(s)
 	if s.index < len(s.data) {
 		line := s.data[s.index:s.lineEnd]
-		if !isBlank(line) {
+		if !isBlank(line) && string(line) != "%%%" {
 			s.text.WriteString("\n")
 			s.html.WriteString("<br />\n")
 		}
@@ -612,7 +629,6 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 	}
 
 	skip(&s)
-	blockBegin(&s, blockParagraph)
 	nextLine(&s)
 	var line []byte
 	for s.index < len(s.data) {
@@ -627,12 +643,12 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				continue
 			}
 
-			blockEnd(&s, blockParagraph)
 			if string(s.prevLine) == "----" {
+				blockEnd(&s, blockParagraph)
 				s.html.WriteString("<hr />\n")
 			}
-			blockBegin(&s, blockParagraph)
 			for s.index < len(s.data) {
+				blockEnd(&s, blockParagraph)
 				nextLine(&s)
 				if s.index >= len(s.data) {
 					break
@@ -643,7 +659,7 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				}
 			}
 		} else if s.block == blockRaw && string(s.prevLine) == "" && string(line) == "}}}" {
-			s.text.WriteString("}}}")
+			s.text.WriteString("\n}}}")
 			blockEnd(&s, blockParagraph)
 			nextLine(&s)
 			blockBegin(&s, blockParagraph)
@@ -655,16 +671,14 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 		} else if s.block == blockMath && string(line) == "%%%" {
 			blockEnd(&s, blockParagraph)
 			nextLine(&s)
-			blockBegin(&s, blockParagraph)
 		} else if level, title, ok := parseHeading(&s, string(line)); ok {
-			s.text.WriteString(string(line))
-			s.plain.WriteString(title)
+			s.text.WriteString("\n" + string(line) + "\n")
+			s.plain.WriteString("\n" + title + "\n")
 			if level == 1 && s.title == "" {
 				s.title = title
 				nextLine(&s)
 			} else {
 				blockEnd(&s, blockNone)
-				blockBegin(&s, blockNone)
 				titleHTML := template.HTMLEscapeString(title)
 				levelStr := strconv.Itoa(level)
 				var buf bytes.Buffer
@@ -675,7 +689,6 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				mark := buf.String()
 				s.html.WriteString("<h" + levelStr + ">" + "<span class=\"markup\">" + mark + "</span> " + titleHTML + " <span class=\"markup\">" + mark + "</span>" + "</h" + levelStr + ">\n")
 				nextLine(&s)
-				blockBegin(&s, blockParagraph)
 			}
 		} else {
 			nomarkLine(cfg, &s)
