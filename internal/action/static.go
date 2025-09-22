@@ -4,7 +4,6 @@ import (
 	"embed"
 	"mime"
 	"net/http"
-	"path/filepath"
 
 	"github.com/akikareha/himewiki/internal/config"
 )
@@ -13,13 +12,13 @@ import (
 var static embed.FS
 
 func Static(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
-	data, err := static.ReadFile("static/" + params.Name)
+	data, err := static.ReadFile("static/" + params.DbName)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	mimeType := mime.TypeByExtension(filepath.Ext(params.Name))
+	mimeType := mime.TypeByExtension("." + params.Ext)
 	if mimeType == "" {
 		mimeType = "application/octet-stream"
 	}

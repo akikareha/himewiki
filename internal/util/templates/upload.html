@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
+<link rel="icon" type="image/png" href="/icon.png?a=static" />
+<title>Upload - {{.SiteName}}</title>
+</head>
+<body>
+
+<h1>Upload</h1>
+
+<form action="/?a=upload" method="POST" enctype="multipart/form-data">
+<input type="text" name="name" value="{{.Name}}" /><br>
+<input type="file" name="file" /><br />
+<input type="submit" name="upload" value="Upload" />
+</form>
+
+{{if .Name}}
+<p>
+URL: {{.Base}}{{.Name}}<br />
+</p>
+<p>
+<img src="/{{.Name | pathescape}}" alt="Uploaded Image" />
+</p>
+{{end}}
+
+<div>
+<a href="/">
+<picture>
+<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)">
+<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)">
+<img src="/logo.png?a=static" alt="{{.SiteName}}">
+</picture>
+</a>
+<a href="/">Back</a>
+</div>
+
+</body>
+</html>

@@ -43,3 +43,9 @@ filter:
       <filtered content>
     - Do not output anything outside this format.
   prompt: ""
+
+image-filter:
+  agent: "ChatGPT"
+  key: "(Your OpenAPI Key Here)"
+  max-length: 4194304
+  max-size: 512

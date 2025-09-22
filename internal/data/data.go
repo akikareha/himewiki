@@ -17,23 +17,7 @@ import (
 var db *pgxpool.Pool
 
 const createTablesSql = `
-CREATE TABLE IF NOT EXISTS pages (
-	name TEXT PRIMARY KEY,
-	content TEXT NOT NULL,
-	revision_id INT NOT NULL REFERENCES revisions(id),
-	updated_at TIMESTAMP NOT NULL DEFAULT now()
-);
-
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
-CREATE INDEX IF NOT EXISTS idx_pages_name_trgm
-	ON pages USING gin (name gin_trgm_ops);
-
-CREATE INDEX IF NOT EXISTS idx_pages_content_trgm
-	ON pages USING gin (content gin_trgm_ops);
-
-CREATE INDEX IF NOT EXISTS idx_pages_updated_at
-	ON pages(updated_at DESC);
 
 CREATE TABLE IF NOT EXISTS revisions (
 	id SERIAL PRIMARY KEY,
@@ -47,11 +31,53 @@ CREATE INDEX IF NOT EXISTS idx_revisions_name_created_at
 
 CREATE INDEX IF NOT EXISTS idx_revisions_name_id
 	ON revisions (name, id DESC);
+
+CREATE TABLE IF NOT EXISTS pages (
+	name TEXT PRIMARY KEY,
+	content TEXT NOT NULL,
+	revision_id INT NOT NULL REFERENCES revisions(id),
+	updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_pages_name_trgm
+	ON pages USING gin (name gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_pages_content_trgm
+	ON pages USING gin (content gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_pages_updated_at
+	ON pages(updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS image_revisions (
+	id SERIAL PRIMARY KEY,
+	name TEXT NOT NULL,
+	content BYTEA NOT NULL,
+	created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_image_revisions_name_created_at
+	ON image_revisions (name, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_image_revisions_name_id
+	ON image_revisions (name, id DESC);
+
+CREATE TABLE IF NOT EXISTS images (
+	name TEXT PRIMARY KEY,
+	content BYTEA NOT NULL,
+	revision_id INT NOT NULL REFERENCES image_revisions(id),
+	updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_images_name_trgm
+	ON images USING gin (name gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_images_updated_at
+	ON images(updated_at DESC);
 `
 
 func Connect(cfg *config.Config) *pgxpool.Pool {
 	var err error
-	
+
 	dsn := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		cfg.Database.User,

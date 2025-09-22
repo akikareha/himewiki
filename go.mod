@@ -1,6 +1,8 @@
 module github.com/akikareha/himewiki
 
-go 1.23.5
+go 1.24.0
+
+toolchain go1.24.7
 
 require (
 	github.com/jackc/pgx/v5 v5.7.6
@@ -20,6 +22,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/image v0.31.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
 )

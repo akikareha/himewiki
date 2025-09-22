@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width">
 <link rel="stylesheet" type="text/css" href="/style.css?a=static" />
 <link rel="icon" type="image/png" href="/icon.png?a=static" />
-<title>Revisions - {{.Name}} - {{.SiteName}}</title>
+<title>Revisions - {{.Title}} - {{.SiteName}}</title>
 </head>
 <body>
 
@@ -22,7 +22,7 @@
 <a href="/{{.Name | pathescape}}">Current</a>
 </div>
 
-<h1>Revisions - {{.Name}}</h1>
+<h1>Revisions - {{.Title}}</h1>
 
 {{range .Revisions}}
 <div><code>

@@ -12,7 +12,7 @@ import (
 )
 
 func Revisions(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
-	revs, err := data.LoadRevisions(params.Name)
+	revs, err := data.LoadRevisions(params.DbName)
 	if err != nil {
 		http.Error(w, "Failed to load revisions", http.StatusInternalServerError)
 		return
@@ -22,10 +22,12 @@ func Revisions(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 tmpl.Execute(w, struct {
 		SiteName string
 		Name string
+		Title string
 		Revisions []data.Revision
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
+		Title: params.DbName,
 		Revisions: revs,
 	})
 }
@@ -41,7 +43,7 @@ func Revert(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		return
 	}
 
-	err := data.Revert(params.Name, *params.ID)
+	err := data.Revert(params.DbName, *params.ID)
 	if err != nil {
 		http.Error(w, "Failed to revert", http.StatusInternalServerError)
 		return
@@ -56,7 +58,7 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 		return
 	}
 
-	content, err := data.LoadRevision(params.Name, *params.ID)
+	content, err := data.LoadRevision(params.DbName, *params.ID)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -64,7 +66,7 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 
 
 	tmpl := util.NewTemplate("revision.html")
-	title, _, _, rendered := format.Apply(cfg, params.Name, content)
+	title, _, _, rendered := format.Apply(cfg, params.DbName, content)
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string

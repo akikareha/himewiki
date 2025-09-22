@@ -2,6 +2,7 @@ package action
 
 import (
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -9,9 +10,11 @@ import (
 )
 
 type Params struct {
-	Name   string
+	Name string
+	DbName string
+	Ext string
 	Action string
-	ID     *int
+	ID *int
 }
 
 func parse(cfg *config.Config, r *http.Request) Params {
@@ -19,6 +22,20 @@ func parse(cfg *config.Config, r *http.Request) Params {
 	if name == "" {
 	  name = cfg.Wiki.Front
 	}
+	ext := filepath.Ext(name)
+	if ext == "" {
+		if name[0] == '.' {
+			ext = name
+		}
+	}
+	dbName := name
+	if ext == ".wiki" {
+		dbName = name[:len(name) - len(ext)]
+	}
+	if ext == "" {
+		ext = ".wiki"
+	}
+	ext = ext[1:]
 
 	action := r.URL.Query().Get("a")
 
@@ -29,33 +46,50 @@ func parse(cfg *config.Config, r *http.Request) Params {
 		idRef = nil
 	}
 
-	return Params{Name: name, Action: action, ID: idRef}
+	return Params{
+		Name: name,
+		DbName: dbName,
+		Ext: ext,
+		Action: action,
+		ID: idRef,
+	}
 }
 
 func handle(cfg *config.Config, w http.ResponseWriter, r *http.Request) {
 	params := parse(cfg, r)
 
-	switch params.Action {
-	case "static":
-		Static(cfg, w, r, &params)
-	case "", "view":
-		View(cfg, w, r, &params)
-	case "edit":
-		Edit(cfg, w, r, &params)
-	case "all":
-		All(cfg, w, r, &params)
-	case "recent":
-		Recent(cfg, w, r, &params)
-	case "revs":
-		Revisions(cfg, w, r, &params)
-	case "revert":
-		Revert(cfg, w, r, &params)
-	case "rev":
-		ViewRevision(cfg, w, r, &params)
-	case "search":
-		Search(cfg, w, r, &params)
-	default:
-		http.NotFound(w, r)
+	if params.Ext == "wiki" {
+		switch params.Action {
+		case "", "view":
+			View(cfg, w, r, &params)
+		case "edit":
+			Edit(cfg, w, r, &params)
+		case "all":
+			All(cfg, w, r, &params)
+		case "recent":
+			Recent(cfg, w, r, &params)
+		case "revs":
+			Revisions(cfg, w, r, &params)
+		case "revert":
+			Revert(cfg, w, r, &params)
+		case "rev":
+			ViewRevision(cfg, w, r, &params)
+		case "search":
+			Search(cfg, w, r, &params)
+		case "upload":
+			Upload(cfg, w, r, &params)
+		default:
+			http.NotFound(w, r)
+		}
+	} else {
+		switch params.Action {
+		case "static":
+			Static(cfg, w, r, &params)
+		case "", "view":
+			ViewImage(cfg, w, r, &params)
+		default:
+			http.NotFound(w, r)
+		}
 	}
 }
 

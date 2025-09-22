@@ -14,14 +14,14 @@ import (
 )
 
 func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
-	_, content, err := data.Load(params.Name)
+	_, content, err := data.Load(params.DbName)
 	if err != nil {
 		http.Redirect(w, r, "/"+url.PathEscape(params.Name)+"?a=edit", http.StatusFound)
 		return
 	}
 
 	tmpl := util.NewTemplate("view.html")
-	title, _, plain, rendered := format.Apply(cfg, params.Name, content)
+	title, _, plain, rendered := format.Apply(cfg, params.DbName, content)
 	summary := format.Summarize(plain, 144)
 	tmpl.Execute(w, struct {
 		Base string
@@ -50,7 +50,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	var save string
 	if r.Method != http.MethodPost {
 		previewed = false
-		revisionID, content, _ = data.Load(params.Name)
+		revisionID, content, _ = data.Load(params.DbName)
 		preview = ""
 		save = ""
 	} else {
@@ -69,7 +69,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	var filtered string
 	var err error
 	if previewed && save != "" {
-		filtered, err = filter.Apply(cfg, params.Name, content)
+		filtered, err = filter.Apply(cfg, params.DbName, content)
 	} else {
 		filtered, err = content, nil
 	}
@@ -77,10 +77,10 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		http.Error(w, "Failed to filter content", http.StatusInternalServerError)
 		return
 	}
-	title, normalized, _, rendered := format.Apply(cfg, params.Name, filtered)
+	title, normalized, _, rendered := format.Apply(cfg, params.DbName, filtered)
 
 	if previewed && save != "" {
-		if err := data.Save(params.Name, normalized, revisionID); err != nil {
+		if err := data.Save(params.DbName, normalized, revisionID); err != nil {
 			http.Error(w, "Failed to save", http.StatusInternalServerError)
 			return
 		}

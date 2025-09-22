@@ -42,7 +42,14 @@ type Config struct {
 		Key string `yaml:"key"`
 		System string `yaml:"system"`
 		Prompt string `yaml:"prompt"`
-	}
+	} `yaml:"filter"`
+
+	ImageFilter struct {
+		Agent string `yaml:"agent"`
+		Key string `yaml:"key"`
+		MaxLength string `yaml:"max-length"`
+		MaxSize string `yaml:"max-size"`
+	} `yaml:"image-filter"`
 }
 
 func Load(path string) *Config {
