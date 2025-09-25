@@ -60,6 +60,8 @@ func handle(cfg *config.Config, w http.ResponseWriter, r *http.Request) {
 
 	if params.Ext == "wiki" {
 		switch params.Action {
+		case "info":
+			Info(cfg, w, r, &params)
 		case "", "view":
 			View(cfg, w, r, &params)
 		case "edit":

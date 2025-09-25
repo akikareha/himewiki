@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=device-width">
+<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
+<link rel="icon" type="image/png" href="/icon.png?a=static" />
+<title>Info - {{.SiteName}}</title>
+</head>
+<body>
+
+<div>
+<a href="/">
+<picture>
+<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)">
+<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)">
+<img src="/logo.png?a=static" alt="{{.SiteName}}">
+</picture>
+</a>
+<a href="/">Back</a>
+</div>
+
+<h1>Info</h1>
+
+<h2>Configurations</h2>
+
+<h3>Site</h3>
+<p>
+Base = {{.Public.Site.Base}}
+</p>
+<p>
+Name = {{.Public.Site.Name}}
+</p>
+<p>
+Card = {{.Public.Site.Card}}
+</p>
+<p>
+<img src="{{.Public.Site.Card}}" alt="Card" />
+</p>
+
+<h3>Wiki</h3>
+<p>
+Front = {{.Public.Wiki.Front}}
+</p>
+
+<h3>Image</h3>
+<p>
+Domains =
+<ul>
+{{range .Public.Image.Domains}}
+<li>{{.}}</li>
+{{else}}
+<li>(none)</li>
+{{end}}
+</ul>
+</p>
+<p>
+Extensions =
+<ul>
+{{range .Public.Image.Extensions}}
+<li>{{.}}</li>
+{{else}}
+<li>(none)</li>
+{{end}}
+</ul>
+</p>
+
+<h3>Filter</h3>
+<p>
+Agent = {{.Public.Filter.Agent}}
+</p>
+<p>
+System =
+<pre>{{.Public.Filter.System}}</pre>
+</p>
+<p>
+Prompt =
+<pre>{{.Public.Filter.Prompt}}</pre>
+</p>
+
+<h3>ImageFilter</h3>
+<p>
+Agent = {{.Public.ImageFilter.Agent}}
+</p>
+<p>
+MaxLength = {{.Public.ImageFilter.MaxLength}}
+</p>
+<p>
+MaxSize = {{.Public.ImageFilter.MaxSize}}
+</p>
+
+<div>
+<br />
+<a href="/">
+<picture>
+<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)">
+<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)">
+<img src="/logo.png?a=static" alt="{{.SiteName}}">
+</picture>
+</a>
+<a href="/">Back</a>
+</div>
+
+</body>
+</html>
