@@ -101,6 +101,48 @@ func Connect(cfg *config.Config) *pgxpool.Pool {
 	return db
 }
 
+type Info struct {
+	Size string
+	PageCount int
+	RevisionCount int
+	ImageCount int
+	ImageRevisionCount int
+}
+
+func Stat() Info {
+	var size string
+	err := db.QueryRow(context.Background(), "SELECT pg_size_pretty(pg_database_size('himewiki'))").Scan(&size)
+	if err != nil {
+		size = "unknown"
+	}
+
+	var pageCount, revisionCount, imageCount, imageRevisionCount int
+	err = db.QueryRow(context.Background(), "SELECT COUNT(*) FROM pages").Scan(&pageCount)
+	if err != nil {
+		pageCount = -1
+	}
+	err = db.QueryRow(context.Background(), "SELECT COUNT(*) FROM revisions").Scan(&revisionCount)
+	if err != nil {
+		revisionCount = -1
+	}
+	err = db.QueryRow(context.Background(), "SELECT COUNT(*) FROM images").Scan(&imageCount)
+	if err != nil {
+		imageCount = -1
+	}
+	err = db.QueryRow(context.Background(), "SELECT COUNT(*) FROM image_revisions").Scan(&imageRevisionCount)
+	if err != nil {
+		imageRevisionCount = -1
+	}
+
+	return Info {
+		Size: size,
+		PageCount: pageCount,
+		RevisionCount: revisionCount,
+		ImageCount: imageCount,
+		ImageRevisionCount: imageRevisionCount,
+	}
+}
+
 func Load(name string) (int, string, error) {
 	var id int
 	var content string
