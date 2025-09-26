@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -236,7 +237,15 @@ type RecentRecord struct {
 	Diff string
 }
 
-func Recent() ([]RecentRecord, error) {
+func Recent(page int, perPage int) ([]RecentRecord, error) {
+	if page < 1 {
+		return nil, errors.New("invalid page")
+	}
+	if perPage < 1 {
+		return nil, errors.New("invalid perPage")
+	}
+	offset := (page - 1) * perPage
+
 	rows, err := db.Query(context.Background(),
 		`SELECT
 			p.name,
@@ -255,7 +264,8 @@ func Recent() ([]RecentRecord, error) {
 				LIMIT 1
 			)
 		 ORDER BY updated_at DESC, name ASC
-		`)
+		 LIMIT $1 OFFSET $2
+		`, perPage, offset)
 	if err != nil {
 		return nil, err
 	}

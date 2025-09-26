@@ -127,8 +127,16 @@ func All(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Par
 	})
 }
 
+const perPage = 50
+
 func Recent(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
-	records, err := data.Recent()
+	pageStr := r.URL.Query().Get("p")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		page = 1
+	}
+
+	records, err := data.Recent(page, perPage)
 	if err != nil {
 		http.Error(w, "Failed to load pages", http.StatusInternalServerError)
 		return
@@ -138,8 +146,10 @@ func Recent(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 	tmpl.Execute(w, struct {
 		SiteName string
 		Records []data.RecentRecord
+		NextPage int
 	}{
 		SiteName: cfg.Site.Name,
 		Records: records,
+		NextPage: page + 1,
 	})
 }
