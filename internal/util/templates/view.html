@@ -2,9 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8" />
-<meta name="format-detection" content="telephone=no">
-<meta name="viewport" content="width=device-width">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+<meta name="format-detection" content="telephone=no" />
+<meta name="viewport" content="width=device-width" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" />
 <link rel="stylesheet" type="text/css" href="/style.css?a=static" />
 <link rel="icon" type="image/png" href="/icon.png?a=static" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
@@ -23,12 +23,12 @@
 </head>
 <body>
 
-<div>
+<div class="menu">
 <a href="/">
 <picture>
-<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)">
-<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)">
-<img src="/logo.png?a=static" alt="{{.SiteName}}">
+<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)" />
+<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)" />
+<img src="/logo.png?a=static" alt="{{.SiteName}}" />
 </picture>
 </a>
 <a href="/{{.Name | pathescape}}?a=edit">Edit</a>
@@ -46,13 +46,13 @@
 {{.Rendered}}
 </div>
 
-<div>
+<div class="menu">
 <br />
 <a href="/">
 <picture>
-<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)">
-<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)">
-<img src="/logo.png?a=static" alt="{{.SiteName}}">
+<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)" />
+<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)" />
+<img src="/logo.png?a=static" alt="{{.SiteName}}" />
 </picture>
 </a>
 <a href="/{{.Name | pathescape}}?a=edit">Edit</a>

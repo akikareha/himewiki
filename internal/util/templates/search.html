@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <meta name="robots" content="noindex, nofollow" />
-<meta name="format-detection" content="telephone=no">
-<meta name="viewport" content="width=device-width">
+<meta name="format-detection" content="telephone=no" />
+<meta name="viewport" content="width=device-width" />
 <link rel="stylesheet" type="text/css" href="/style.css?a=static" />
 <link rel="icon" type="image/png" href="/icon.png?a=static" />
 <title>Search - {{.SiteName}}</title>
@@ -18,8 +18,8 @@ Name Search
 <form action="/?a=search" method="GET">
 <input type="hidden" name="a" value="search" />
 <input type="hidden" name="t" value="name" />
-<input type="text" name="w" value="{{.Word}}">
-<input type="submit" value="Go">
+<input type="text" name="w" value="{{.Word}}" />
+<input type="submit" value="Go" />
 </form>
 
 Content Search
@@ -30,12 +30,12 @@ Content Search
 <input type="submit" value="Go" />
 </form>
 
-<div>
+<div class="menu">
 <a href="/">
 <picture>
-<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)">
-<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)">
-<img src="/logo.png?a=static" alt="{{.SiteName}}">
+<source srcset="/logo.png?a=static" media="(prefers-color-scheme: light)" />
+<source srcset="/logo-dark.png?a=static" media="(prefers-color-scheme: dark)" />
+<img src="/logo.png?a=static" alt="{{.SiteName}}" />
 </picture>
 </a>
 <a href="/">Back</a>
@@ -54,7 +54,7 @@ Content Search
 </ul>
 {{end}}
 
-<div>
+<div class="menu">
 <br />
 <a href="#top">Top</a>
 </div>
