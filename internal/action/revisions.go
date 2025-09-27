@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
@@ -12,7 +13,13 @@ import (
 )
 
 func Revisions(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
-	revs, err := data.LoadRevisions(params.DbName)
+	pageStr := r.URL.Query().Get("p")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		page = 1
+	}
+
+	revs, err := data.LoadRevisions(params.DbName, page, perPage)
 	if err != nil {
 		http.Error(w, "Failed to load revisions", http.StatusInternalServerError)
 		return
@@ -24,11 +31,13 @@ tmpl.Execute(w, struct {
 		Name string
 		Title string
 		Revisions []data.Revision
+		NextPage int
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
 		Title: params.DbName,
 		Revisions: revs,
+		NextPage: page + 1,
 	})
 }
 

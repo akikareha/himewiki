@@ -298,12 +298,22 @@ type Revision struct {
 	CreatedAt time.Time
 }
 
-func LoadRevisions(name string) ([]Revision, error) {
+func LoadRevisions(name string, page int, perPage int) ([]Revision, error) {
+	if page < 1 {
+		return nil, errors.New("invalid page")
+	}
+	if perPage < 1 {
+		return nil, errors.New("invalid perPage")
+	}
+	offset := (page - 1) * perPage
+
 	rows, err := db.Query(context.Background(),
 		`SELECT id, name, content, created_at
 		 FROM revisions
 		 WHERE name=$1
-		 ORDER BY created_at DESC`, name)
+		 ORDER BY created_at DESC
+		 LIMIT $2 OFFSET $3
+		`, name, perPage + 1, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -321,8 +331,11 @@ func LoadRevisions(name string) ([]Revision, error) {
 	for i := 0; i < len(revs) - 1; i++ {
 		revs[i].Diff = diff(revs[i + 1].Content, revs[i].Content)
 	}
-	if len(revs) > 0 {
+	if len(revs) > 0 && len(revs) < perPage + 1 {
 		revs[len(revs) - 1].Diff = diff("", revs[len(revs) - 1].Content)
+	}
+	if len(revs) > perPage {
+		revs = revs[:perPage]
 	}
 	return revs, nil
 }
