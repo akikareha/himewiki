@@ -110,8 +110,16 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	})
 }
 
+const perBigPage = 500
+
 func All(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
-	pages, err := data.LoadAll()
+	pageStr := r.URL.Query().Get("p")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		page = 1
+	}
+
+	pages, err := data.LoadAll(page, perBigPage)
 	if err != nil {
 		http.Error(w, "Failed to load pages", http.StatusInternalServerError)
 		return
@@ -121,9 +129,11 @@ func All(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Par
 	tmpl.Execute(w, struct {
 		SiteName string
 		Pages []string
+		NextPage int
 	}{
 		SiteName: cfg.Site.Name,
 		Pages: pages,
+		NextPage: page + 1,
 	})
 }
 

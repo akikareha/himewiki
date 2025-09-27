@@ -213,9 +213,18 @@ func Save(name, content string, baseRevID int) error {
 	return tx.Commit(ctx)
 }
 
-func LoadAll() ([]string, error) {
+func LoadAll(page int, perPage int) ([]string, error) {
+	if page < 1 {
+		return nil, errors.New("invalid page")
+	}
+	if perPage < 1 {
+		return nil, errors.New("invalid perPage")
+	}
+	offset := (page - 1) * perPage
+
 	rows, err := db.Query(context.Background(),
-		"SELECT name FROM pages ORDER BY name")
+		"SELECT name FROM pages ORDER BY name LIMIT $1 OFFSET $2",
+		perPage, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -366,10 +375,20 @@ func LoadRevision(name string, revID int) (string, error) {
 	return content, err
 }
 
-func SearchNames(word string) ([]string, error) {
+func SearchNames(word string, page int, perPage int) ([]string, error) {
+	if page < 1 {
+		return nil, errors.New("invalid page")
+	}
+	if perPage < 1 {
+		return nil, errors.New("invalid perPage")
+	}
+	offset := (page - 1) * perPage
+
 	rows, err := db.Query(context.Background(),
-		"SELECT name FROM pages WHERE name ILIKE '%' || $1 || '%' ORDER BY name",
-		word)
+		`SELECT name FROM pages WHERE name ILIKE '%' || $1 || '%'
+		 ORDER BY name
+		 LIMIT $2 OFFSET $3
+		`, word, perPage, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -386,10 +405,20 @@ func SearchNames(word string) ([]string, error) {
 	return results, nil
 }
 
-func SearchContents(word string) ([]string, error) {
+func SearchContents(word string, page int, perPage int) ([]string, error) {
+	if page < 1 {
+		return nil, errors.New("invalid page")
+	}
+	if perPage < 1 {
+		return nil, errors.New("invalid perPage")
+	}
+	offset := (page - 1) * perPage
+
 	rows, err := db.Query(context.Background(),
-		"SELECT name FROM pages WHERE content ILIKE '%' || $1 || '%' ORDER BY name",
-		word)
+		`SELECT name FROM pages WHERE content ILIKE '%' || $1 || '%'
+		 ORDER BY name
+		 LIMIT $2 OFFSET $3
+		`, word, perPage, offset)
 	if err != nil {
 		return nil, err
 	}

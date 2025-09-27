@@ -46,6 +46,11 @@ Content Search
 <li>No results found.</li>
 {{end}}
 </ul>
+
+<div class="menu">
+<br />
+<a href="/?a=search&t={{.Type}}&w={{.Word | urlquery}}&p={{.NextPage}}">Next</a>
+</div>
 {{end}}
 
 <div class="menu">
