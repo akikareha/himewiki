@@ -78,7 +78,7 @@ func Upload(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 			return
 		}
 
-		if err := data.SaveImage(name, filtered); err != nil {
+		if err := data.SaveImage(cfg, name, filtered); err != nil {
 			http.Error(w, "Failed to save", http.StatusInternalServerError)
 			return
 		}

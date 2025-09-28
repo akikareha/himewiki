@@ -80,7 +80,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	title, normalized, _, rendered := format.Apply(cfg, params.DbName, filtered)
 
 	if previewed && save != "" {
-		if err := data.Save(params.DbName, normalized, revisionID); err != nil {
+		if err := data.Save(cfg, params.DbName, normalized, revisionID); err != nil {
 			http.Error(w, "Failed to save", http.StatusInternalServerError)
 			return
 		}

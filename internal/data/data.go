@@ -199,7 +199,7 @@ func diff(oldText, newText string) string {
 	return text
 }
 
-func Save(name, content string, baseRevID int) error {
+func Save(cfg *config.Config, name, content string, baseRevID int) error {
 	ctx := context.Background()
 	tx, err := db.Begin(ctx)
 	if err != nil {
@@ -240,16 +240,68 @@ func Save(name, content string, baseRevID int) error {
 		return err
 	}
 
-	_, err = tx.Exec(ctx,
-		`UPDATE state
-		 SET page_counter = page_counter + 1
-		 WHERE id = 1`,
-		)
+	var pageCount int64
+	err = tx.QueryRow(ctx, `
+		UPDATE state
+		SET page_counter = page_counter + 1
+		WHERE id = 1
+		RETURNING page_counter
+	`).Scan(&pageCount)
 	if err != nil {
 		return err
 	}
 
-	return tx.Commit(ctx)
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
+
+	if pageCount % int64(cfg.Vacuum.CheckEvery) == 0 {
+		var sizeBytes int64
+		err = db.QueryRow(ctx, `
+			SELECT pg_total_relation_size('pages') +
+			       pg_total_relation_size('revisions')
+		`).Scan(&sizeBytes)
+		if err != nil {
+			return err
+		}
+
+		if sizeBytes >= cfg.Vacuum.Threshold {
+			_, err = db.Exec(ctx, "VACUUM FULL pages")
+			if err != nil {
+				return err
+			}
+
+			_, err = db.Exec(ctx, `
+				WITH cutoff AS (
+					SELECT COUNT(*) / 2 AS limit_count
+					FROM revisions
+					GROUP BY name
+					ORDER BY COUNT(*) DESC
+					LIMIT 1
+				)
+				DELETE FROM revisions r
+				USING cutoff
+				WHERE r.id IN (
+					SELECT id
+					FROM revisions r2, cutoff
+					WHERE r2.name = r.name
+					ORDER BY r2.created_at ASC
+					OFFSET cutoff.limit_count
+				)
+			`)
+			if err != nil {
+				return err
+			}
+
+			_, err = db.Exec(ctx, "VACUUM FULL revisions")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func LoadAll(page int, perPage int) ([]string, error) {

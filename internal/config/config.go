@@ -22,6 +22,12 @@ type Config struct {
 		SSLMode  string `yaml:"sslmode"`
 	} `yaml:"database"`
 
+	Vacuum struct {
+		CheckEvery int `yaml:"check-every"`
+		Threshold int64 `yaml:"threshold"`
+		ImageThreshold int64 `yaml:"image-threshold"`
+	} `yaml:"vacuum"`
+
 	Site struct {
 		Base string `yaml:"base"`
 		Name string `yaml:"name"`

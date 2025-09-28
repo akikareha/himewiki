@@ -10,6 +10,11 @@ database:
   name: "himewiki"
   sslmode: "disable"
 
+vacuum:
+    check-every: 250
+    threshold: 68719476736
+    image-threshold: 68719476736
+
 site:
   base: "https://wiki.example.org/"
   name: "HimeWiki"

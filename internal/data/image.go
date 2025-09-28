@@ -2,6 +2,8 @@ package data
 
 import (
 	"context"
+
+	"github.com/akikareha/himewiki/internal/config"
 )
 
 func LoadImage(name string) (int, []byte, error) {
@@ -17,7 +19,7 @@ func LoadImage(name string) (int, []byte, error) {
 	return id, content, nil
 }
 
-func SaveImage(name string, content []byte) error {
+func SaveImage(cfg *config.Config, name string, content []byte) error {
 	ctx := context.Background()
 	tx, err := db.Begin(ctx)
 	if err != nil {
@@ -47,14 +49,66 @@ func SaveImage(name string, content []byte) error {
 		return err
 	}
 
-	_, err = tx.Exec(ctx,
-		`UPDATE state
-		 SET image_counter = image_counter + 1
-		 WHERE id = 1`,
-		)
+	var imageCount int64
+	err = tx.QueryRow(ctx, `
+		UPDATE state
+		SET image_counter = image_counter + 1
+		WHERE id = 1
+		RETURNING image_counter
+	`).Scan(&imageCount)
 	if err != nil {
 		return err
 	}
 
-	return tx.Commit(ctx)
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
+
+	if imageCount % int64(cfg.Vacuum.CheckEvery) == 0 {
+		var sizeBytes int64
+		err = db.QueryRow(ctx, `
+			SELECT pg_total_relation_size('images') +
+			       pg_total_relation_size('image_revisions')
+		`).Scan(&sizeBytes)
+		if err != nil {
+			return err
+		}
+
+		if sizeBytes >= cfg.Vacuum.ImageThreshold {
+			_, err = db.Exec(ctx, "VACUUM FULL images")
+			if err != nil {
+				return err
+			}
+
+			_, err = db.Exec(ctx, `
+				WITH cutoff AS (
+					SELECT COUNT(*) / 2 AS limit_count
+					FROM image_revisions
+					GROUP BY name
+					ORDER BY COUNT(*) DESC
+					LIMIT 1
+				)
+				DELETE FROM image_revisions r
+				USING cutoff
+				WHERE r.id IN (
+					SELECT id
+					FROM image_revisions r2, cutoff
+					WHERE r2.name = r.name
+					ORDER BY r2.created_at ASC
+					OFFSET cutoff.limit_count
+				)
+			`)
+			if err != nil {
+				return err
+			}
+
+			_, err = db.Exec(ctx, "VACUUM FULL image_revisions")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
