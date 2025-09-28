@@ -20,6 +20,24 @@ var db *pgxpool.Pool
 const createTablesSql = `
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
+CREATE TABLE IF NOT EXISTS pages (
+	name TEXT PRIMARY KEY,
+	content TEXT NOT NULL,
+	revision_id INT NOT NULL,
+	updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_pages_name_trgm
+	ON pages USING gin (name gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_pages_content_trgm
+	ON pages USING gin (content gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_pages_updated_at
+	ON pages(updated_at DESC);
+
+ALTER TABLE pages SET (autovacuum_enabled = true);
+
 CREATE TABLE IF NOT EXISTS revisions (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
@@ -33,21 +51,22 @@ CREATE INDEX IF NOT EXISTS idx_revisions_name_created_at
 CREATE INDEX IF NOT EXISTS idx_revisions_name_id
 	ON revisions (name, id DESC);
 
-CREATE TABLE IF NOT EXISTS pages (
+ALTER TABLE revisions SET (autovacuum_enabled = false);
+
+CREATE TABLE IF NOT EXISTS images (
 	name TEXT PRIMARY KEY,
-	content TEXT NOT NULL,
-	revision_id INT NOT NULL REFERENCES revisions(id),
+	content BYTEA NOT NULL,
+	revision_id INT NOT NULL,
 	updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_pages_name_trgm
-	ON pages USING gin (name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_images_name_trgm
+	ON images USING gin (name gin_trgm_ops);
 
-CREATE INDEX IF NOT EXISTS idx_pages_content_trgm
-	ON pages USING gin (content gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_images_updated_at
+	ON images(updated_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_pages_updated_at
-	ON pages(updated_at DESC);
+ALTER TABLE images SET (autovacuum_enabled = true);
 
 CREATE TABLE IF NOT EXISTS image_revisions (
 	id SERIAL PRIMARY KEY,
@@ -62,19 +81,19 @@ CREATE INDEX IF NOT EXISTS idx_image_revisions_name_created_at
 CREATE INDEX IF NOT EXISTS idx_image_revisions_name_id
 	ON image_revisions (name, id DESC);
 
-CREATE TABLE IF NOT EXISTS images (
-	name TEXT PRIMARY KEY,
-	content BYTEA NOT NULL,
-	revision_id INT NOT NULL REFERENCES image_revisions(id),
-	updated_at TIMESTAMP NOT NULL DEFAULT now()
+ALTER TABLE image_revisions SET (autovacuum_enabled = false);
+
+CREATE TABLE IF NOT EXISTS state (
+	id INT PRIMARY KEY DEFAULT 1,
+	boot_counter BIGINT NOT NULL DEFAULT 0,
+	page_counter BIGINT NOT NULL DEFAULT 0,
+	image_counter BIGINT NOT NULL DEFAULT 0
 );
 
-CREATE INDEX IF NOT EXISTS idx_images_name_trgm
-	ON images USING gin (name gin_trgm_ops);
-
-CREATE INDEX IF NOT EXISTS idx_images_updated_at
-	ON images(updated_at DESC);
+ALTER TABLE state SET (autovacuum_enabled = true);
 `
+
+var bootCount int64
 
 func Connect(cfg *config.Config) *pgxpool.Pool {
 	var err error
@@ -97,6 +116,17 @@ func Connect(cfg *config.Config) *pgxpool.Pool {
 	_, err = db.Exec(context.Background(), createTablesSql)
 	if err != nil {
 		log.Fatalf("failed to create table: %v", err)
+	}
+
+	err = db.QueryRow(context.Background(), `
+		INSERT INTO state (id, boot_counter, page_counter, image_counter)
+		VALUES (1, 1, 0, 0)
+		ON CONFLICT (id)
+		DO UPDATE SET boot_counter = state.boot_counter + 1
+		RETURNING boot_counter;
+	`).Scan(&bootCount)
+	if err != nil {
+		log.Fatalf("failed to count up boot conter: %v", err)
 	}
 
 	return db
@@ -206,6 +236,15 @@ func Save(name, content string, baseRevID int) error {
 		     revision_id=EXCLUDED.revision_id,
 		     updated_at=now()`,
 		name, content, newRevID)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx,
+		`UPDATE state
+		 SET page_counter = page_counter + 1
+		 WHERE id = 1`,
+		)
 	if err != nil {
 		return err
 	}

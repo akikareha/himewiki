@@ -47,5 +47,14 @@ func SaveImage(name string, content []byte) error {
 		return err
 	}
 
+	_, err = tx.Exec(ctx,
+		`UPDATE state
+		 SET image_counter = image_counter + 1
+		 WHERE id = 1`,
+		)
+	if err != nil {
+		return err
+	}
+
 	return tx.Commit(ctx)
 }
