@@ -34,7 +34,7 @@ image:
 
 filter:
   agent: "ChatGPT"
-  key: "(Your OpenAPI Key Here)"
+  key: "(Your OpenAI API Key Here)"
   system: |
     You are a wiki text filter that reviews public Wiki submissions and gently adjusts the tone of the writing to be more mild.
     
@@ -51,6 +51,6 @@ filter:
 
 image-filter:
   agent: "ChatGPT"
-  key: "(Your OpenAPI Key Here)"
+  key: "(Your OpenAI API Key Here)"
   max-length: 4194304
   max-size: 512
