@@ -23,6 +23,14 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	tmpl := util.NewTemplate("view.html")
 	title, _, plain, rendered := format.Apply(cfg, params.DbName, content)
 	summary := format.Summarize(plain, 144)
+
+	subAction := r.URL.Query().Get("b")
+	diffText := ""
+	if subAction == "diff" {
+		_, prev, _ := data.LoadPrev(params.DbName)
+		diffText = util.Diff(prev, content)
+	}
+
 	tmpl.Execute(w, struct {
 		Base string
 		SiteName string
@@ -31,6 +39,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Summary string
 		Title string
 		Rendered template.HTML
+		Diff string
 	}{
 		Base: cfg.Site.Base,
 		SiteName: cfg.Site.Name,
@@ -39,6 +48,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Summary: summary,
 		Title: title,
 		Rendered: template.HTML(rendered),
+		Diff: diffText,
 	})
 }
 
@@ -79,15 +89,18 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	}
 	title, normalized, _, rendered := format.Apply(cfg, params.DbName, filtered)
 
+	diffText := ""
 	if previewed && save != "" {
 		if err := data.Save(cfg, params.DbName, normalized, revisionID); err != nil {
 			http.Error(w, "Failed to save", http.StatusInternalServerError)
 			return
 		}
-		http.Redirect(w, r, "/"+url.PathEscape(params.Name), http.StatusFound)
+		http.Redirect(w, r, "/"+url.PathEscape(params.Name) + "?b=diff", http.StatusFound)
 		return
 	} else if preview != "" {
 		previewed = true
+		_, current, _ := data.Load(params.DbName)
+		diffText = util.Diff(current, normalized)
 	}
 
 	tmpl := util.NewTemplate("edit.html")
@@ -99,6 +112,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Text string
 		Title string
 		Rendered template.HTML 
+		Diff string
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
@@ -107,6 +121,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Text: normalized,
 		Title: title,
 		Rendered: template.HTML(rendered),
+		Diff: diffText,
 	})
 }
 

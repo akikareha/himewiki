@@ -10,9 +10,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/pmezard/go-difflib/difflib"
 
 	"github.com/akikareha/himewiki/internal/config"
+	"github.com/akikareha/himewiki/internal/util"
 )
 
 var db *pgxpool.Pool
@@ -187,16 +187,36 @@ func Load(name string) (int, string, error) {
 	return id, content, nil
 }
 
-func diff(oldText, newText string) string {
-	diff := difflib.UnifiedDiff{
-		A: difflib.SplitLines(oldText),
-		B: difflib.SplitLines(newText),
-		FromFile: "old",
-		ToFile:  "new",
-		Context: 3,
+func LoadPrev(name string) (int, string, error) {
+	rows, err := db.Query(context.Background(),
+		`SELECT id, content
+		 FROM revisions
+		 WHERE name=$1
+		 ORDER BY created_at DESC
+		 LIMIT 2
+		`, name)
+	if err != nil {
+		return 0, "", err
 	}
-	text, _ := difflib.GetUnifiedDiffString(diff)
-	return text
+	defer rows.Close()
+
+	var ids []int
+	var contents []string
+	for rows.Next() {
+		var id int
+		var content string
+		if err := rows.Scan(&id, &content); err != nil {
+			return 0, "", err
+		}
+		ids = append(ids, id)
+		contents = append(contents, content)
+	}
+
+	if len(ids) < 2 {
+		return 0, "", errors.New("no previous revisions")
+	} else {
+		return ids[1], contents[1], nil
+	}
 }
 
 func Save(cfg *config.Config, name, content string, baseRevID int) error {
@@ -380,9 +400,9 @@ func Recent(page int, perPage int) ([]RecentRecord, error) {
 		}
 		var diffText string
 		if prevContent.Valid {
-			diffText = diff(prevContent.String, content)
+			diffText = util.Diff(prevContent.String, content)
 		} else {
-			diffText = diff("", content)
+			diffText = util.Diff("", content)
 		}
 		record := RecentRecord{ Name: name, Diff: diffText }
 		results = append(results, record)
@@ -429,10 +449,10 @@ func LoadRevisions(name string, page int, perPage int) ([]Revision, error) {
 	}
 
 	for i := 0; i < len(revs) - 1; i++ {
-		revs[i].Diff = diff(revs[i + 1].Content, revs[i].Content)
+		revs[i].Diff = util.Diff(revs[i + 1].Content, revs[i].Content)
 	}
 	if len(revs) > 0 && len(revs) < perPage + 1 {
-		revs[len(revs) - 1].Diff = diff("", revs[len(revs) - 1].Content)
+		revs[len(revs) - 1].Diff = util.Diff("", revs[len(revs) - 1].Content)
 	}
 	if len(revs) > perPage {
 		revs = revs[:perPage]

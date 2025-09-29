@@ -22,6 +22,10 @@
 <div>
 {{.Rendered}}
 </div>
+<h1>Diff</h1>
+<div><code>
+{{.Diff | fmtdiff}}
+</code></div>
 {{end}}
 
 <h1>Edit - {{.Title}}</h1>

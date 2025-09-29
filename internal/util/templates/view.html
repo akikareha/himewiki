@@ -34,6 +34,13 @@
 <a href="/?a=info">Info</a>
 </div>
 
+{{if .Diff}}
+<h1>Diff</h1>
+<div><code>
+{{.Diff | fmtdiff}}
+</code></div>
+{{end}}
+
 <h1><a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Title}}</a></h1>
 
 <div>
