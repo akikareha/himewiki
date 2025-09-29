@@ -73,20 +73,25 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 		return
 	}
 
-
 	tmpl := util.NewTemplate("revision.html")
 	title, _, _, rendered := format.Apply(cfg, params.DbName, content)
+
+	_, current, _ := data.Load(params.DbName)
+	diffText := util.Diff(current, content)
+
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
 		Title string
 		Rendered template.HTML
 		ID int
+		Diff string
 	}{
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
 		Title: title,
 		Rendered: template.HTML(rendered),
 		ID: *params.ID,
+		Diff: diffText,
 	})
 }

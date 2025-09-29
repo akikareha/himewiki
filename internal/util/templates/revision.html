@@ -28,6 +28,13 @@
 {{.Rendered}}
 </div>
 
+{{if .Diff}}
+<h1>Diff</h1>
+<div><code>
+{{.Diff | fmtdiff}}
+</code></div>
+{{end}}
+
 <form action="/{{.Name | pathescape}}?a=revert&i={{.ID}}" method="POST">
 <input type="submit" name="revert" value="Revert" />
 </form>
