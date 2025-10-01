@@ -667,7 +667,7 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 			nextLine(&s)
 			blockBegin(&s, blockParagraph)
 			s.text.WriteString("}}}")
-			s.html.WriteString("<span class=\"markup\">}}}</span><br />\n")
+			s.html.WriteString("<span class=\"markup\">}}}</span>")
 		} else if s.block != blockMath && s.block != blockRaw && string(line) == "%%%" {
 			blockEnd(&s, blockMath)
 			nextLine(&s)
