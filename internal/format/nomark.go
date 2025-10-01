@@ -127,6 +127,10 @@ func blockEnd(s *state, block blockMode) {
 		if s.index < len(s.data) {
 			s.html.WriteString("\n")
 		}
+	} else if s.block == blockNone {
+		if block == blockRaw {
+			s.text.WriteString("\n")
+		}
 	}
 	s.block = blockNone
 }
@@ -659,10 +663,10 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				}
 			}
 		} else if s.block == blockRaw && string(s.prevLine) == "" && string(line) == "}}}" {
-			s.text.WriteString("\n}}}")
 			blockEnd(&s, blockParagraph)
 			nextLine(&s)
 			blockBegin(&s, blockParagraph)
+			s.text.WriteString("}}}")
 			s.html.WriteString("<span class=\"markup\">}}}</span><br />\n")
 		} else if s.block != blockMath && s.block != blockRaw && string(line) == "%%%" {
 			blockEnd(&s, blockMath)
