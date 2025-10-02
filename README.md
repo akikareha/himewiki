@@ -121,3 +121,31 @@ Then open your browser at `http://localhost:4444/`.
 [MIT License](LICENSE)
 
 Author: Aki Kareha <aki@kareha.org>
+
+---
+
+## For Researchers
+
+Although HimeWiki is a hobby project and intentionally kept simple,  
+its design may be of interest for academic research in fields such as
+**CSCW**, **HCI**, and **NLP**.
+
+- CSCW: collaborative editing systems and AI-assisted cooperation  
+- HCI: user experience and interaction with AI-mediated content  
+- NLP: style transfer, politeness adjustment, and malicious-to-benevolent
+  text transformation  
+
+If you are a researcher looking for an experimental platform, feel free to
+**fork this project**  
+and extend it for your study.  
+
+HimeWiki itself will remain minimal, but we encourage forks to explore
+research-oriented features such as:  
+
+- logging raw user input (before AI filtering)  
+- tracking user behavior for analysis  
+- comparing AI-filtered vs. original edits  
+- experimenting with different filtering prompts and styles  
+
+We would be delighted if HimeWiki could serve as a starting point for
+future studies.
