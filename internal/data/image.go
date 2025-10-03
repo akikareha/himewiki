@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"errors"
 
 	"github.com/akikareha/himewiki/internal/config"
 )
@@ -111,4 +112,32 @@ func SaveImage(cfg *config.Config, name string, content []byte) error {
 	}
 
 	return nil
+}
+
+func LoadAllImages(page int, perPage int) ([]string, error) {
+	if page < 1 {
+		return nil, errors.New("invalid page")
+	}
+	if perPage < 1 {
+		return nil, errors.New("invalid perPage")
+	}
+	offset := (page - 1) * perPage
+
+	rows, err := db.Query(context.Background(),
+		"SELECT name FROM images ORDER BY name LIMIT $1 OFFSET $2",
+		perPage, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		results = append(results, name)
+	}
+	return results, nil
 }

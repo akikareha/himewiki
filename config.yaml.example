@@ -66,6 +66,12 @@ filter:
             - Nomark is mostly plain text but supports a few minimal markup rules,
               such as [[...]] for internal links and raw URLs for external links.
             - Do not convert plain URLs into Markdown links.
+            - Do not alter the number of consecutive exclamation marks (!).
+              In Nomark syntax, headings are written like !!! Title !!!
+              with three or more ! on each side. The exact count of !
+              characters must be preserved.
+            - Do not remove or merge line breaks. Preserve all original
+              newlines exactly as they appear in the input.
     - Do not reinterpret the format once detected.
 
     - Output only in the specified STATUS format.

@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
@@ -93,5 +94,34 @@ func Upload(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		Base: cfg.Site.Base,
 		SiteName: cfg.Site.Name,
 		Name: name,
+	})
+}
+
+const imagesPerPage = 200
+
+func AllImages(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
+	pageStr := r.URL.Query().Get("p")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		page = 1
+	}
+
+	images, err := data.LoadAllImages(page, imagesPerPage)
+	if err != nil {
+		http.Error(w, "Failed to load images", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl := util.NewTemplate("allimgs.html")
+	tmpl.Execute(w, struct {
+		Base string
+		SiteName string
+		Images []string
+		NextPage int
+	}{
+		Base: cfg.Site.Base,
+		SiteName: cfg.Site.Name,
+		Images: images,
+		NextPage: page + 1,
 	})
 }

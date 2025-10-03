@@ -80,6 +80,8 @@ func handle(cfg *config.Config, w http.ResponseWriter, r *http.Request) {
 			Search(cfg, w, r, &params)
 		case "upload":
 			Upload(cfg, w, r, &params)
+		case "allimgs":
+			AllImages(cfg, w, r, &params)
 		default:
 			http.NotFound(w, r)
 		}

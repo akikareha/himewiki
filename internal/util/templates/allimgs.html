@@ -6,34 +6,39 @@
 <meta name="viewport" content="width=device-width" />
 <link rel="stylesheet" type="text/css" href="/style.css?a=static" />
 <link rel="icon" type="image/png" href="/icon.png?a=static" />
-<title>All - {{.SiteName}}</title>
+<title>All Images - {{.SiteName}}</title>
 </head>
 <body>
 
 <div class="menu">
 <a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
-<a href="/">Back</a>
+<a href="/?a=upload">Back</a>
 </div>
 
-<h1>All</h1>
+<h1>All Images</h1>
 
 <ul>
-{{range .Pages}}
-<li><a href="/{{. | pathescape}}">{{.}}</a></li>
+{{range .Images}}
+<p>
+URL: {{$.Base}}{{.}}<br />
+</p>
+<p>
+<a href="/{{. | pathescape}}?a=img"><img src="/{{. | pathescape}}" alt="Uploaded Image" /></a>
+</p>
 {{else}}
-<li>No pages.</li>
+<li>No images.</li>
 {{end}}
 </ul>
 
 <div class="menu">
 <br />
-<a href="/?a=all&p={{.NextPage}}">Next</a>
+<a href="/?a=allimgs&p={{.NextPage}}">Next</a>
 </div>
 
 <div class="menu">
 <br />
 <a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
-<a href="/">Back</a>
+<a href="/?a=upload">Back</a>
 </div>
 
 </body>
