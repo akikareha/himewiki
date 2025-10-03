@@ -25,3 +25,13 @@ func ImageApply(cfg *config.Config, title string, data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Invalid image filter agent. If you want to disable filter, set it to \"nil\".")
 	}
 }
+
+func GnomeApply(cfg *config.Config, title string, content string) (string, error) {
+	if cfg.Filter.Agent == "ChatGPT" {
+		return gnomeWithChatGPT(cfg, title, content)
+	} else if cfg.Filter.Agent == "nil" {
+		return content, nil
+	} else {
+		return "", fmt.Errorf("Invalid gnome filter agent. If you want to disable filter, set it to \"nil\".")
+	}
+}

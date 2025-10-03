@@ -91,10 +91,21 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 
 	diffText := ""
 	if previewed && save != "" {
-		if err := data.Save(cfg, params.DbName, normalized, revisionID); err != nil {
+		pageCount, err := data.Save(cfg, params.DbName, normalized, revisionID)
+		if err != nil {
 			http.Error(w, "Failed to save", http.StatusInternalServerError)
 			return
 		}
+
+		if cfg.Gnome.Agent != "nil" {
+			if pageCount % int64(cfg.Gnome.Ratio) == 0 {
+				targetRecent := (pageCount / int64(cfg.Gnome.Ratio)) % int64(cfg.Gnome.Recent)
+				go func() {
+					runGnome(cfg, int(targetRecent))
+				}()
+			}
+		}
+
 		http.Redirect(w, r, "/"+url.PathEscape(params.Name) + "?b=diff", http.StatusFound)
 		return
 	} else if preview != "" {

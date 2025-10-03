@@ -56,6 +56,15 @@ type Config struct {
 		MaxLength string `yaml:"max-length"`
 		MaxSize string `yaml:"max-size"`
 	} `yaml:"image-filter"`
+
+	Gnome struct {
+		Agent string `yaml:"agent"`
+		Key string `yaml:"key"`
+		System string `yaml:"system"`
+		Prompt string `yaml:"prompt"`
+		Ratio int `yaml:"ratio"`
+		Recent int `yaml:"recent"`
+	} `yaml:"gnome"`
 }
 
 func Load(path string) *Config {

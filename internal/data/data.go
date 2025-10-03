@@ -219,11 +219,11 @@ func LoadPrev(name string) (int, string, error) {
 	}
 }
 
-func Save(cfg *config.Config, name, content string, baseRevID int) error {
+func Save(cfg *config.Config, name, content string, baseRevID int) (int64, error) {
 	ctx := context.Background()
 	tx, err := db.Begin(ctx)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer tx.Rollback(ctx)
 
@@ -231,11 +231,11 @@ func Save(cfg *config.Config, name, content string, baseRevID int) error {
 	err = tx.QueryRow(ctx, "SELECT revision_id FROM pages WHERE name=$1", name).
 		Scan(&currentRevID)
 	if err != nil && err != pgx.ErrNoRows {
-		return err
+		return 0, err
 	}
 
 	if currentRevID != 0 && currentRevID != baseRevID {
-		return fmt.Errorf("edit conflict")
+		return 0, fmt.Errorf("edit conflict")
 	}
 
 	var newRevID int
@@ -245,7 +245,7 @@ func Save(cfg *config.Config, name, content string, baseRevID int) error {
 		 RETURNING id`,
 		name, content).Scan(&newRevID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	_, err = tx.Exec(ctx,
@@ -257,7 +257,7 @@ func Save(cfg *config.Config, name, content string, baseRevID int) error {
 		     updated_at=now()`,
 		name, content, newRevID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	var pageCount int64
@@ -268,12 +268,12 @@ func Save(cfg *config.Config, name, content string, baseRevID int) error {
 		RETURNING page_counter
 	`).Scan(&pageCount)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if pageCount % int64(cfg.Vacuum.CheckEvery) == 0 {
@@ -283,13 +283,13 @@ func Save(cfg *config.Config, name, content string, baseRevID int) error {
 			       pg_total_relation_size('revisions')
 		`).Scan(&sizeBytes)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		if sizeBytes >= cfg.Vacuum.Threshold {
 			_, err = db.Exec(ctx, "VACUUM FULL pages")
 			if err != nil {
-				return err
+				return 0, err
 			}
 
 			_, err = db.Exec(ctx, `
@@ -311,17 +311,17 @@ func Save(cfg *config.Config, name, content string, baseRevID int) error {
 				)
 			`)
 			if err != nil {
-				return err
+				return 0, err
 			}
 
 			_, err = db.Exec(ctx, "VACUUM FULL revisions")
 			if err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
+	return pageCount, nil
 }
 
 func LoadAll(page int, perPage int) ([]string, error) {
@@ -406,6 +406,32 @@ func Recent(page int, perPage int) ([]RecentRecord, error) {
 		}
 		record := RecentRecord{ Name: name, Diff: diffText }
 		results = append(results, record)
+	}
+	return results, nil
+}
+
+func RecentNames(limit int) ([]string, error) {
+	if limit < 0 {
+		return nil, errors.New("invalid limit")
+	}
+
+	rows, err := db.Query(context.Background(),
+		`SELECT name FROM pages
+		 ORDER BY updated_at DESC, name ASC
+		 LIMIT $1
+		`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		results = append(results, name)
 	}
 	return results, nil
 }
