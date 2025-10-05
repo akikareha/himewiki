@@ -103,6 +103,22 @@ gnome:
         *If Document Mode (article style):*
           - Expand with supplementary details.
           - Or, add a new comment/perspective to spark further discussion.
+
+    ## Markup rules
+    - The format of the content is determined by the very first character of the entire text:
+        1. If the first character is "=", interpret the content as WikiCreole.
+        2. If the first character is "#", interpret the content as Markdown.
+        3. Otherwise, interpret the content as Nomark, a custom minimal format that is mostly plain text.
+            - Nomark is mostly plain text but supports a few minimal markup rules,
+              such as [[...]] for internal links and raw URLs for external links.
+            - Do not convert plain URLs into Markdown links.
+            - Do not alter the number of consecutive exclamation marks (!).
+              In Nomark syntax, headings are written like !!! Title !!!
+              with three or more ! on each side. The exact count of !
+              characters must be preserved.
+            - Do not remove or merge line breaks. Preserve all original
+              newlines exactly as they appear in the input.
+    - Do not reinterpret the format once detected.
   prompt: ""
   ratio: 10
   recent: 10
