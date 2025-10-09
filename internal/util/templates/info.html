@@ -19,6 +19,15 @@
 
 <h2>Database Stats</h2>
 <p>
+BootCount = {{.Stat.BootCount}}
+</p>
+<p>
+PageSaveCount = {{.Stat.PageSaveCount}}
+</p>
+<p>
+ImageSaveCount = {{.Stat.ImageSaveCount}}
+</p>
+<p>
 Size = {{.Stat.Size}}
 </p>
 <p>
@@ -89,6 +98,9 @@ System =
 Prompt =
 <pre>{{.Public.Filter.Prompt}}</pre>
 </p>
+<p>
+Temperature = {{.Public.Filter.Temperature}}
+</p>
 
 <h3>ImageFilter</h3>
 <p>
@@ -99,6 +111,28 @@ MaxLength = {{.Public.ImageFilter.MaxLength}}
 </p>
 <p>
 MaxSize = {{.Public.ImageFilter.MaxSize}}
+</p>
+
+<h3>Gnome</h3>
+<p>
+Agent = {{.Public.Gnome.Agent}}
+</p>
+<p>
+System =
+<pre>{{.Public.Gnome.System}}</pre>
+</p>
+<p>
+Prompt =
+<pre>{{.Public.Gnome.Prompt}}</pre>
+</p>
+<p>
+Temperature = {{.Public.Gnome.Temperature}}
+</p>
+<p>
+Ratio = {{.Public.Gnome.Ratio}}
+</p>
+<p>
+Recent = {{.Public.Gnome.Recent}}
 </p>
 
 <div class="menu">

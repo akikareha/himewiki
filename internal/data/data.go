@@ -133,6 +133,9 @@ func Connect(cfg *config.Config) *pgxpool.Pool {
 }
 
 type Info struct {
+	BootCount int64
+	PageSaveCount int64
+	ImageSaveCount int64
 	Size string
 	PageCount int
 	RevisionCount int
@@ -141,8 +144,16 @@ type Info struct {
 }
 
 func Stat() Info {
+	var bootCount, pageSaveCount, imageSaveCount int64
+	err := db.QueryRow(context.Background(), "SELECT boot_counter, page_counter, image_counter FROM state").Scan(&bootCount, &pageSaveCount, &imageSaveCount)
+	if err != nil {
+		bootCount = -1
+		pageSaveCount = -1
+		imageSaveCount = -1
+	}
+
 	var size string
-	err := db.QueryRow(context.Background(), "SELECT pg_size_pretty(pg_database_size('himewiki'))").Scan(&size)
+	err = db.QueryRow(context.Background(), "SELECT pg_size_pretty(pg_database_size('himewiki'))").Scan(&size)
 	if err != nil {
 		size = "unknown"
 	}
@@ -166,6 +177,9 @@ func Stat() Info {
 	}
 
 	return Info {
+		BootCount: bootCount,
+		PageSaveCount: pageSaveCount,
+		ImageSaveCount: imageSaveCount,
 		Size: size,
 		PageCount: pageCount,
 		RevisionCount: revisionCount,

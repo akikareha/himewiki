@@ -80,9 +80,8 @@ filter:
               In Nomark syntax, headings are written like !!! Title !!!
               with three or more ! on each side. The exact count of !
               characters must be preserved.
-            - Do not remove or merge line breaks. Preserve all original
-              newlines exactly as they appear in the input.
     - Do not reinterpret the format once detected.
+    - Absolutely preserve line breaks. Do not delete, collapse, or add newlines. The input's line structure must remain identical in the output.
 
     - Output only in the specified STATUS format.
   prompt: ""
@@ -127,9 +126,8 @@ gnome:
               In Nomark syntax, headings are written like !!! Title !!!
               with three or more ! on each side. The exact count of !
               characters must be preserved.
-            - Do not remove or merge line breaks. Preserve all original
-              newlines exactly as they appear in the input.
     - Do not reinterpret the format once detected.
+    - Absolutely preserve line breaks. Do not delete, collapse, or add newlines. The input's line structure must remain identical in the output.
   prompt: ""
   temperature: 0.4
   ratio: 10
