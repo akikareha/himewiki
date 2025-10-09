@@ -30,6 +30,7 @@ func gnomeWithChatGPT(cfg *config.Config, title string, content string) (string,
 				openai.SystemMessage(cfg.Gnome.System),
 				openai.UserMessage(cfg.Gnome.Prompt + message),
 			},
+			Temperature: openai.Float(cfg.Gnome.Temperature),
 		},
 	)
 	if err != nil {

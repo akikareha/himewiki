@@ -48,13 +48,14 @@ type Config struct {
 		Key string `yaml:"key"`
 		System string `yaml:"system"`
 		Prompt string `yaml:"prompt"`
+		Temperature float64 `yaml:"temperature"`
 	} `yaml:"filter"`
 
 	ImageFilter struct {
 		Agent string `yaml:"agent"`
 		Key string `yaml:"key"`
-		MaxLength string `yaml:"max-length"`
-		MaxSize string `yaml:"max-size"`
+		MaxLength int `yaml:"max-length"`
+		MaxSize int `yaml:"max-size"`
 	} `yaml:"image-filter"`
 
 	Gnome struct {
@@ -62,6 +63,7 @@ type Config struct {
 		Key string `yaml:"key"`
 		System string `yaml:"system"`
 		Prompt string `yaml:"prompt"`
+		Temperature float64 `yaml:"temperature"`
 		Ratio int `yaml:"ratio"`
 		Recent int `yaml:"recent"`
 	} `yaml:"gnome"`

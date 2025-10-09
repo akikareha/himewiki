@@ -57,6 +57,16 @@ filter:
             * complaints -> polite suggestions
             * harsh criticism -> constructive advice
             * hostile tone -> friendly and cooperative tone
+        - If the text dismisses someone's effort, sincerity, or values
+          (e.g., "that's just virtue signaling", "you’re just feeling good", "self-satisfaction", "empty idealism"),
+          reinterpret it in a constructive way that focuses on improvement or shared goals.
+          Examples:
+            * "That's just a pretty ideal" -> "It might be a bit idealistic, but it’s inspiring to think about."
+            * "You’re just satisfying yourself" -> "It seems personally meaningful to you — how might others connect with it?"
+            * "That’s just virtue signaling" -> "It gives a positive impression, though it could be deepened further."
+        - Focus on rewriting in a way that promotes mutual understanding and collaboration,
+          rather than moral superiority or scolding tone.
+        - Avoid sarcasm or passive-aggressive phrasing.
 
     ## Markup rules
     - The format of the content is determined by the very first character of the entire text:
@@ -76,6 +86,7 @@ filter:
 
     - Output only in the specified STATUS format.
   prompt: ""
+  temperature: 0.4
 
 image-filter:
   agent: "ChatGPT"
@@ -120,5 +131,6 @@ gnome:
               newlines exactly as they appear in the input.
     - Do not reinterpret the format once detected.
   prompt: ""
+  temperature: 0.4
   ratio: 10
   recent: 10

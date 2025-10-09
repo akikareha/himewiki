@@ -11,7 +11,6 @@ import (
 	"mime"
 	"net/http"
 	"path/filepath"
-	"strconv"
 
 	"golang.org/x/image/draw"
 
@@ -22,10 +21,7 @@ import (
 )
 
 func imageWithChatGPT(cfg *config.Config, title string, data []byte) ([]byte, error) {
-	maxLength, err := strconv.Atoi(cfg.ImageFilter.MaxLength)
-	if err != nil {
-		return nil, fmt.Errorf("invalid MaxLength: %w", err)
-	}
+	maxLength := cfg.ImageFilter.MaxLength
 	if len(data) > maxLength {
 		return nil, fmt.Errorf("image data too long")
 	}
@@ -61,10 +57,7 @@ func imageWithChatGPT(cfg *config.Config, title string, data []byte) ([]byte, er
 	height := bounds.Dy()
 
 	newW, newH := width, height
-	maxSize, err := strconv.Atoi(cfg.ImageFilter.MaxSize)
-	if err != nil {
-		return nil, fmt.Errorf("invalid MaxSize: %w", err)
-	}
+	maxSize := cfg.ImageFilter.MaxSize
 	if width > maxSize || height > maxSize {
 		scale := float64(maxSize) / float64(width)
 		if height > width {
