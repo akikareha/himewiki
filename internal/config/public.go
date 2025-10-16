@@ -21,6 +21,7 @@ type Public struct {
 		System string
 		Prompt string
 		Temperature float64
+		Common string
 	}
 
 	ImageFilter struct {
@@ -71,11 +72,13 @@ func Publish(cfg *Config) Public {
 			System string
 			Prompt string
 			Temperature float64
+			Common string
 		}{
 			Agent: cfg.Filter.Agent,
 			System: cfg.Filter.System,
 			Prompt: cfg.Filter.Prompt,
 			Temperature: cfg.Filter.Temperature,
+			Common: cfg.Filter.Common,
 		},
 
 		ImageFilter: struct {

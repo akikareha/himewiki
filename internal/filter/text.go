@@ -28,7 +28,7 @@ func withChatGPT(cfg *config.Config, title string, content string) (string, erro
 		openai.ChatCompletionNewParams{
 			Model: openai.ChatModelGPT4o,
 			Messages: []openai.ChatCompletionMessageParamUnion{
-				openai.SystemMessage(cfg.Filter.System),
+				openai.SystemMessage(cfg.Filter.System + "\n" + cfg.Filter.Common),
 				openai.UserMessage(cfg.Filter.Prompt + message),
 			},
 			Temperature: openai.Float(cfg.Filter.Temperature),

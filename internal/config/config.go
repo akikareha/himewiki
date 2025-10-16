@@ -49,6 +49,7 @@ type Config struct {
 		System string `yaml:"system"`
 		Prompt string `yaml:"prompt"`
 		Temperature float64 `yaml:"temperature"`
+		Common string `yaml:"common"`
 	} `yaml:"filter"`
 
 	ImageFilter struct {

@@ -27,7 +27,7 @@ func gnomeWithChatGPT(cfg *config.Config, title string, content string) (string,
 		openai.ChatCompletionNewParams{
 			Model: openai.ChatModelGPT4o,
 			Messages: []openai.ChatCompletionMessageParamUnion{
-				openai.SystemMessage(cfg.Gnome.System),
+				openai.SystemMessage(cfg.Gnome.System + "\n" + cfg.Filter.Common),
 				openai.UserMessage(cfg.Gnome.Prompt + message),
 			},
 			Temperature: openai.Float(cfg.Gnome.Temperature),
