@@ -79,6 +79,16 @@ filter:
     - Only rewrite within each language; never replace one language with another.
     - Maintain all language-specific punctuation, spacing, and typography.
 
+    ## Style
+    - Use a single-sentence-per-line layout.
+      Each sentence should be followed by a line break instead of being grouped into paragraphs.
+      This creates a clear rhythm and improves readability.
+    - Write using short, simple sentences.
+      Do not combine multiple sentences into a single complex one.
+    - Treat blank lines as paragraph boundaries.
+      Each paragraph should remain separated by one blank line.
+      Keep all existing blank lines between paragraphs unchanged.
+
     ## Markup rules
     - Interpret the content as Nomark, a custom minimal format that is mostly plain text.
     - Nomark is mostly plain text but supports a few minimal markup rules,
