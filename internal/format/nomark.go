@@ -647,10 +647,6 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				continue
 			}
 
-			if string(s.prevLine) == "----" {
-				blockEnd(&s, blockParagraph)
-				s.html.WriteString("<hr />\n")
-			}
 			for s.index < len(s.data) {
 				blockEnd(&s, blockParagraph)
 				nextLine(&s)
