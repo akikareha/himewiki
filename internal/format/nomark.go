@@ -1,7 +1,6 @@
 package format
 
 import (
-	"bytes"
 	"html/template"
 	"net/url"
 	"path"
@@ -32,26 +31,26 @@ const (
 )
 
 type state struct {
-	data      []byte
+	input     string
 	index     int
-	text      *bytes.Buffer
-	plain     *bytes.Buffer
-	html      *bytes.Buffer
+	text      *strings.Builder
+	plain     *strings.Builder
+	html      *strings.Builder
 	block     blockMode
 	nextLine  int
 	lineEnd   int
 	outerDeco decoMode
 	innerDeco decoMode
-	prevLine  []byte
+	prevLine  string
 	firstRaw  bool
 	title     string
 }
 
 func skip(s *state) {
-	for s.index < len(s.data) {
+	for s.index < len(s.input) {
 		end := s.index
-		for end < len(s.data) {
-			c := s.data[end]
+		for end < len(s.input) {
+			c := s.input[end]
 			if c == '\r' || c == '\n' {
 				end += 1
 				break
@@ -67,14 +66,14 @@ func skip(s *state) {
 
 func skipEnd(s *state) {
 	i := s.index
-	for i < len(s.data) {
-		c := s.data[i]
+	for i < len(s.input) {
+		c := s.input[i]
 		if c != '\r' && c != '\n' && c != ' ' && c != '\t' {
 			break
 		}
 		i += 1
 	}
-	if i >= len(s.data) {
+	if i >= len(s.input) {
 		s.index = i
 	}
 }
@@ -85,22 +84,22 @@ func nextLine(s *state) {
 		s.lineEnd = s.index
 	}
 	s.index = s.nextLine
-	if s.nextLine >= len(s.data) {
+	if s.nextLine >= len(s.input) {
 		return
 	}
-	i := bytes.IndexByte(s.data[s.nextLine:], '\n')
+	i := strings.IndexByte(s.input[s.nextLine:], '\n')
 	if i == -1 {
-		s.nextLine = len(s.data)
-		s.lineEnd = len(s.data)
+		s.nextLine = len(s.input)
+		s.lineEnd = len(s.input)
 	} else {
 		end := s.nextLine + i
 		s.nextLine = end + 1
-		if end > 0 && s.data[end-1] == '\r' {
+		if end > 0 && s.input[end-1] == '\r' {
 			end -= 1
 		}
 		if s.block != blockRaw {
 			for end > 0 {
-				c := s.data[end-1]
+				c := s.input[end-1]
 				if c != ' ' && c != '\t' {
 					break
 				}
@@ -117,7 +116,7 @@ func blockEnd(s *state, block blockMode) {
 		if block != blockRaw && block != blockCode {
 			skip(s)
 		}
-		if s.index < len(s.data) {
+		if s.index < len(s.input) {
 			if block != blockMath {
 				s.text.WriteString("\n")
 				s.plain.WriteString("\n")
@@ -126,20 +125,20 @@ func blockEnd(s *state, block blockMode) {
 		}
 	} else if s.block == blockRaw {
 		s.html.WriteString("</code></pre>")
-		if s.index < len(s.data) {
-			c := s.data[s.index]
+		if s.index < len(s.input) {
+			c := s.input[s.index]
 			if c != '\r' && c != '\n' {
 				s.text.WriteString("\n")
 			}
 		}
 		skip(s)
-		if s.index < len(s.data) {
+		if s.index < len(s.input) {
 			s.html.WriteString("\n")
 		}
 	} else if s.block == blockCode {
 		s.html.WriteString("</code></pre>")
 		skip(s)
-		if s.index < len(s.data) {
+		if s.index < len(s.input) {
 			s.html.WriteString("\n")
 		}
 	} else if s.block == blockMath {
@@ -148,7 +147,7 @@ func blockEnd(s *state, block blockMode) {
 		s.html.WriteString("<span class=\"markup\">%%%</span>\n")
 		s.html.WriteString("</div>")
 		skip(s)
-		if s.index < len(s.data) {
+		if s.index < len(s.input) {
 			s.html.WriteString("\n")
 		}
 	} else if s.block == blockNone {
@@ -190,7 +189,7 @@ func checkBlock(s *state, block blockMode) {
 }
 
 func ignore(s *state) bool {
-	c := s.data[s.index]
+	c := s.input[s.index]
 	if c == '\r' {
 		s.index += 1
 		return true
@@ -199,19 +198,19 @@ func ignore(s *state) bool {
 }
 
 func math(cfg *config.Config, s *state) bool {
-	line := s.data[s.index:s.lineEnd]
-	if !bytes.HasPrefix(line, []byte("%%")) {
+	line := s.input[s.index:s.lineEnd]
+	if !strings.HasPrefix(line, "%%") {
 		return false
 	}
-	//end := bytes.Index(s.data[s.index + 2:) // XXX unsafe
-	end := bytes.Index(line[2:], []byte("%%"))
+	//end := strings.Index(s.input[s.index + 2:]) // XXX unsafe
+	end := strings.Index(line[2:], "%%")
 	if end == -1 {
 		return false
 	}
-	text := s.data[s.index+2 : s.index+2+end]
-	html := template.HTMLEscapeString(string(text))
-	s.text.WriteString("%%" + string(text) + "%%")
-	s.plain.WriteString(string(text))
+	text := s.input[s.index+2 : s.index+2+end]
+	html := template.HTMLEscapeString(text)
+	s.text.WriteString("%%" + text + "%%")
+	s.plain.WriteString(text)
 	s.html.WriteString("<span class=\"markup\">%%</span>")
 	s.html.WriteString("<nomark-math class=\"mathjax\">\\(" + html + "\\)</nomark-math>")
 	s.html.WriteString("<span class=\"markup\">%%</span>")
@@ -221,8 +220,8 @@ func math(cfg *config.Config, s *state) bool {
 }
 
 func strong(cfg *config.Config, s *state) bool {
-	line := s.data[s.index:s.lineEnd]
-	if !bytes.HasPrefix(line, []byte("**")) {
+	line := s.input[s.index:s.lineEnd]
+	if !strings.HasPrefix(line, "**") {
 		return false
 	}
 
@@ -277,8 +276,8 @@ func strong(cfg *config.Config, s *state) bool {
 }
 
 func em(cfg *config.Config, s *state) bool {
-	line := s.data[s.index:s.lineEnd]
-	if !bytes.HasPrefix(line, []byte("//")) {
+	line := s.input[s.index:s.lineEnd]
+	if !strings.HasPrefix(line, "//") {
 		return false
 	}
 
@@ -334,7 +333,7 @@ func em(cfg *config.Config, s *state) bool {
 
 func camel(s *state) bool {
 	if s.index > 0 {
-		c := s.data[s.index-1]
+		c := s.input[s.index-1]
 		if c >= 'A' && c <= 'Z' {
 			return false
 		}
@@ -345,7 +344,7 @@ func camel(s *state) bool {
 			return false
 		}
 	}
-	line := s.data[s.index:s.lineEnd]
+	line := s.input[s.index:s.lineEnd]
 	if len(line) < 3 {
 		return false
 	}
@@ -406,7 +405,7 @@ func camel(s *state) bool {
 			i += 1
 		}
 	}
-	name := string(line[:i])
+	name := line[:i]
 
 	s.text.WriteString(name)
 	s.plain.WriteString(name)
@@ -417,15 +416,15 @@ func camel(s *state) bool {
 }
 
 func wikiLink(s *state) bool {
-	line := s.data[s.index:s.lineEnd]
-	if !bytes.HasPrefix(line, []byte("[[")) {
+	line := s.input[s.index:s.lineEnd]
+	if !strings.HasPrefix(line, "[[") {
 		return false
 	}
-	ket := bytes.Index(line[2:], []byte("]]"))
+	ket := strings.Index(line[2:], "]]")
 	if ket == -1 {
 		return false
 	}
-	name := string(line[2 : 2+ket])
+	name := line[2 : 2+ket]
 
 	s.text.WriteString("[[" + name + "]]")
 	s.plain.WriteString(name)
@@ -435,23 +434,23 @@ func wikiLink(s *state) bool {
 	return true
 }
 
-func spaceIndex(b []byte) int {
-	for i := 0; i < len(b); i += 1 {
-		c := b[i]
+func spaceIndex(line string) int {
+	for i := 0; i < len(line); i += 1 {
+		c := line[i]
 		if c == '\r' || c == '\n' || c == ' ' || c == '\t' {
 			return i
 		}
 	}
-	return len(b)
+	return len(line)
 }
 
 func link(cfg *config.Config, s *state) bool {
-	line := s.data[s.index:s.lineEnd]
-	if !bytes.HasPrefix(line, []byte("https:")) {
+	line := s.input[s.index:s.lineEnd]
+	if !strings.HasPrefix(line, "https:") {
 		return false
 	}
 	space := spaceIndex(line[6:])
-	rawURL := string(line[:6+space])
+	rawURL := line[:6+space]
 
 	u, err := url.Parse(rawURL)
 	if err != nil || u.Scheme != "https" {
@@ -492,7 +491,7 @@ func link(cfg *config.Config, s *state) bool {
 }
 
 func html(s *state) bool {
-	c := s.data[s.index]
+	c := s.input[s.index]
 	if c == '&' {
 		s.index += 1
 		s.text.WriteString("&")
@@ -522,7 +521,7 @@ func html(s *state) bool {
 }
 
 func raw(s *state) bool {
-	c := s.data[s.index]
+	c := s.input[s.index]
 	s.index += 1
 	s.text.WriteByte(c)
 	s.plain.WriteByte(c)
@@ -530,8 +529,8 @@ func raw(s *state) bool {
 	return true
 }
 
-func isBlank(b []byte) bool {
-	for _, c := range b {
+func isBlank(line string) bool {
+	for _, c := range line {
 		if c != '\r' && c != '\n' && c != ' ' && c != '\t' {
 			return false
 		}
@@ -542,7 +541,7 @@ func isBlank(b []byte) bool {
 var headingRe = regexp.MustCompile("^!!!(!*) (.+?) !!!(!*)$")
 
 func parseHeading(s *state, line string) (level int, title string, ok bool) {
-	if string(s.prevLine) != "" {
+	if s.prevLine != "" {
 		return 0, "", false
 	}
 
@@ -596,7 +595,7 @@ func markup(cfg *config.Config, s *state) {
 
 func nomarkLine(cfg *config.Config, s *state) {
 	if s.block != blockRaw && s.block != blockCode && s.block != blockMath {
-		line := string(s.data[s.index:s.lineEnd])
+		line := s.input[s.index:s.lineEnd]
 		if strings.HasPrefix(line, " ") {
 			blockEnd(s, blockRaw)
 			blockBegin(s, blockRaw)
@@ -608,7 +607,7 @@ func nomarkLine(cfg *config.Config, s *state) {
 	}
 
 	if s.block == blockRaw {
-		line := string(s.data[s.index:s.lineEnd])
+		line := s.input[s.index:s.lineEnd]
 		if strings.HasPrefix(line, " ") {
 			s.text.WriteString("\n" + line)
 			s.html.WriteString("\n" + template.HTMLEscapeString(line))
@@ -618,7 +617,7 @@ func nomarkLine(cfg *config.Config, s *state) {
 	}
 
 	if s.block == blockCode {
-		line := string(s.data[s.index:s.lineEnd])
+		line := s.input[s.index:s.lineEnd]
 		if s.firstRaw {
 			s.text.WriteString(line)
 			s.html.WriteString(template.HTMLEscapeString(line))
@@ -632,7 +631,7 @@ func nomarkLine(cfg *config.Config, s *state) {
 	}
 
 	if s.block == blockMath {
-		line := string(s.data[s.index:s.lineEnd])
+		line := s.input[s.index:s.lineEnd]
 		s.text.WriteString(line + "\n")
 		s.html.WriteString("\n" + template.HTMLEscapeString(line))
 		nextLine(s)
@@ -640,7 +639,7 @@ func nomarkLine(cfg *config.Config, s *state) {
 	}
 
 	{
-		line := string(s.data[s.index:s.lineEnd])
+		line := s.input[s.index:s.lineEnd]
 		if line == "{{{" {
 			s.text.WriteString("{{{")
 			s.html.WriteString("<span class=\"markup\">{{{</span>")
@@ -660,9 +659,9 @@ func nomarkLine(cfg *config.Config, s *state) {
 	markup(cfg, s)
 	nextLine(s)
 	skipEnd(s)
-	if s.index < len(s.data) {
-		line := s.data[s.index:s.lineEnd]
-		if !isBlank(line) && string(line) != "%%%" {
+	if s.index < len(s.input) {
+		line := s.input[s.index:s.lineEnd]
+		if !isBlank(line) && line != "%%%" {
 			s.text.WriteString("\n")
 			if prevBlock != blockRaw {
 				s.html.WriteString("<br />\n")
@@ -672,31 +671,30 @@ func nomarkLine(cfg *config.Config, s *state) {
 }
 
 func nomark(cfg *config.Config, title string, text string) (string, string, string, string) {
-	d := []byte(text)
 	s := state{
-		data:      d,
+		input:     text,
 		index:     0,
-		text:      new(bytes.Buffer),
-		plain:     new(bytes.Buffer),
-		html:      new(bytes.Buffer),
+		text:      new(strings.Builder),
+		plain:     new(strings.Builder),
+		html:      new(strings.Builder),
 		block:     blockNone,
 		nextLine:  0,
 		lineEnd:   0,
 		outerDeco: decoNone,
 		innerDeco: decoNone,
-		prevLine:  d[0:0],
+		prevLine:  text[0:0],
 		firstRaw:  false,
 		title:     "",
 	}
 
 	skip(&s)
 	nextLine(&s)
-	var line []byte
-	for s.index < len(s.data) {
+	var line string
+	for s.index < len(s.input) {
 		s.prevLine = line
-		line = s.data[s.index:s.lineEnd]
+		line = s.input[s.index:s.lineEnd]
 		if s.block != blockRaw && s.block != blockCode && s.block != blockMath && isBlank(line) {
-			if string(s.prevLine) == "{{{" {
+			if s.prevLine == "{{{" {
 				blockEnd(&s, blockCode)
 				nextLine(&s)
 				blockBegin(&s, blockCode)
@@ -704,30 +702,30 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				continue
 			}
 
-			for s.index < len(s.data) {
+			for s.index < len(s.input) {
 				blockEnd(&s, blockParagraph)
 				nextLine(&s)
-				if s.index >= len(s.data) {
+				if s.index >= len(s.input) {
 					break
 				}
-				line := s.data[s.index:s.lineEnd]
+				line := s.input[s.index:s.lineEnd]
 				if !isBlank(line) {
 					break
 				}
 			}
-		} else if s.block == blockCode && string(s.prevLine) == "" && string(line) == "}}}" {
+		} else if s.block == blockCode && s.prevLine == "" && line == "}}}" {
 			blockEnd(&s, blockParagraph)
 			checkBlock(&s, blockParagraph)
 			nomarkLine(cfg, &s)
-		} else if s.block != blockMath && s.block != blockRaw && s.block != blockCode && string(line) == "%%%" {
+		} else if s.block != blockMath && s.block != blockRaw && s.block != blockCode && line == "%%%" {
 			blockEnd(&s, blockMath)
 			nextLine(&s)
 			blockBegin(&s, blockMath)
-		} else if s.block == blockMath && string(line) == "%%%" {
+		} else if s.block == blockMath && line == "%%%" {
 			blockEnd(&s, blockParagraph)
 			nextLine(&s)
-		} else if level, title, ok := parseHeading(&s, string(line)); ok {
-			s.text.WriteString("\n" + string(line) + "\n")
+		} else if level, title, ok := parseHeading(&s, line); ok {
+			s.text.WriteString("\n" + line + "\n")
 			s.plain.WriteString("\n" + title + "\n")
 			if level == 1 && s.title == "" {
 				s.title = title
@@ -736,10 +734,10 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				blockEnd(&s, blockNone)
 				titleHTML := template.HTMLEscapeString(title)
 				levelStr := strconv.Itoa(level)
-				var buf bytes.Buffer
-				buf.Write([]byte("!!!"))
+				var buf strings.Builder
+				buf.WriteString("!!!")
 				for i := 0; i <= 3-level; i += 1 {
-					buf.WriteByte('!')
+					buf.WriteRune('!')
 				}
 				mark := buf.String()
 				s.html.WriteString("<h" + levelStr + ">" + "<span class=\"markup\">" + mark + "</span> " + titleHTML + " <span class=\"markup\">" + mark + "</span>" + "</h" + levelStr + ">\n")
