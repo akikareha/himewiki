@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/akikareha/himewiki/internal/config"
 )
@@ -18,6 +19,7 @@ const (
 	blockNone blockMode = iota
 	blockParagraph
 	blockRaw
+	blockCode
 	blockMath
 )
 
@@ -30,28 +32,36 @@ const (
 )
 
 type state struct {
-	data []byte
-	index int
-	text *bytes.Buffer
-	plain *bytes.Buffer
-	html *bytes.Buffer
-	block blockMode
-	nextLine int
-	lineEnd int
+	data      []byte
+	index     int
+	text      *bytes.Buffer
+	plain     *bytes.Buffer
+	html      *bytes.Buffer
+	block     blockMode
+	nextLine  int
+	lineEnd   int
 	outerDeco decoMode
 	innerDeco decoMode
-	prevLine []byte
-	firstRaw bool
-	title string
+	prevLine  []byte
+	firstRaw  bool
+	title     string
 }
 
 func skip(s *state) {
 	for s.index < len(s.data) {
-		c := s.data[s.index]
-		if c != '\r' && c != '\n' && c != ' ' && c != '\t' {
-			break
+		end := s.index
+		for end < len(s.data) {
+			c := s.data[end]
+			if c == '\r' || c == '\n' {
+				end += 1
+				break
+			}
+			if c != ' ' {
+				return
+			}
+			end += 1
 		}
-		s.index += 1
+		s.index = end
 	}
 }
 
@@ -85,15 +95,17 @@ func nextLine(s *state) {
 	} else {
 		end := s.nextLine + i
 		s.nextLine = end + 1
-		if end > 0 && s.data[end - 1] == '\r' {
+		if end > 0 && s.data[end-1] == '\r' {
 			end -= 1
 		}
-		for end > 0 {
-			c := s.data[end - 1]
-			if c != ' ' && c != '\t' {
-				break
+		if s.block != blockRaw {
+			for end > 0 {
+				c := s.data[end-1]
+				if c != ' ' && c != '\t' {
+					break
+				}
+				end -= 1
 			}
-			end -= 1
 		}
 		s.lineEnd = end
 	}
@@ -102,7 +114,7 @@ func nextLine(s *state) {
 func blockEnd(s *state, block blockMode) {
 	if s.block == blockParagraph {
 		s.html.WriteString("\n</p>")
-		if block != blockRaw {
+		if block != blockRaw && block != blockCode {
 			skip(s)
 		}
 		if s.index < len(s.data) {
@@ -113,6 +125,18 @@ func blockEnd(s *state, block blockMode) {
 			s.html.WriteString("\n")
 		}
 	} else if s.block == blockRaw {
+		s.html.WriteString("</code></pre>")
+		if s.index < len(s.data) {
+			c := s.data[s.index]
+			if c != '\r' && c != '\n' {
+				s.text.WriteString("\n")
+			}
+		}
+		skip(s)
+		if s.index < len(s.data) {
+			s.html.WriteString("\n")
+		}
+	} else if s.block == blockCode {
 		s.html.WriteString("</code></pre>")
 		skip(s)
 		if s.index < len(s.data) {
@@ -128,7 +152,7 @@ func blockEnd(s *state, block blockMode) {
 			s.html.WriteString("\n")
 		}
 	} else if s.block == blockNone {
-		if block == blockRaw {
+		if block == blockRaw || block == blockCode {
 			s.text.WriteString("\n")
 		}
 	}
@@ -143,6 +167,8 @@ func blockBegin(s *state, block blockMode) {
 		s.plain.WriteString("\n")
 		s.html.WriteString("<p>\n")
 	} else if block == blockRaw {
+		s.html.WriteString("<pre><code>")
+	} else if block == blockCode {
 		s.text.WriteString("\n")
 		s.plain.WriteString("\n")
 		s.html.WriteString("<pre><code>")
@@ -182,7 +208,7 @@ func math(cfg *config.Config, s *state) bool {
 	if end == -1 {
 		return false
 	}
-	text := s.data[s.index + 2:s.index + 2 + end]
+	text := s.data[s.index+2 : s.index+2+end]
 	html := template.HTMLEscapeString(string(text))
 	s.text.WriteString("%%" + string(text) + "%%")
 	s.plain.WriteString(string(text))
@@ -308,7 +334,7 @@ func em(cfg *config.Config, s *state) bool {
 
 func camel(s *state) bool {
 	if s.index > 0 {
-		c := s.data[s.index - 1]
+		c := s.data[s.index-1]
 		if c >= 'A' && c <= 'Z' {
 			return false
 		}
@@ -346,7 +372,7 @@ func camel(s *state) bool {
 	upper := true
 	for i < len(line) {
 		c = line[i]
-		if c >= '0' && c <='9' {
+		if c >= '0' && c <= '9' {
 			i += 1
 			for i < len(line) {
 				c = line[i]
@@ -399,7 +425,7 @@ func wikiLink(s *state) bool {
 	if ket == -1 {
 		return false
 	}
-	name := string(line[2:2 + ket])
+	name := string(line[2 : 2+ket])
 
 	s.text.WriteString("[[" + name + "]]")
 	s.plain.WriteString(name)
@@ -410,7 +436,7 @@ func wikiLink(s *state) bool {
 }
 
 func spaceIndex(b []byte) int {
-	for i := 0; i < len(b) ; i += 1 {
+	for i := 0; i < len(b); i += 1 {
 		c := b[i]
 		if c == '\r' || c == '\n' || c == ' ' || c == '\t' {
 			return i
@@ -425,7 +451,7 @@ func link(cfg *config.Config, s *state) bool {
 		return false
 	}
 	space := spaceIndex(line[6:])
-	rawURL := string(line[:6 + space])
+	rawURL := string(line[:6+space])
 
 	u, err := url.Parse(rawURL)
 	if err != nil || u.Scheme != "https" {
@@ -436,7 +462,7 @@ func link(cfg *config.Config, s *state) bool {
 	ext := filepath.Ext(filename)
 	extFound := false
 	for _, extension := range cfg.Image.Extensions {
-		if ext == "." + extension {
+		if ext == "."+extension {
 			extFound = true
 			break
 		}
@@ -569,7 +595,29 @@ func markup(cfg *config.Config, s *state) {
 }
 
 func nomarkLine(cfg *config.Config, s *state) {
+	if s.block != blockRaw && s.block != blockCode && s.block != blockMath {
+		line := string(s.data[s.index:s.lineEnd])
+		if strings.HasPrefix(line, " ") {
+			blockEnd(s, blockRaw)
+			blockBegin(s, blockRaw)
+			s.text.WriteString(line)
+			s.html.WriteString(template.HTMLEscapeString(line))
+			nextLine(s)
+			return
+		}
+	}
+
 	if s.block == blockRaw {
+		line := string(s.data[s.index:s.lineEnd])
+		if strings.HasPrefix(line, " ") {
+			s.text.WriteString("\n" + line)
+			s.html.WriteString("\n" + template.HTMLEscapeString(line))
+			nextLine(s)
+			return
+		}
+	}
+
+	if s.block == blockCode {
 		line := string(s.data[s.index:s.lineEnd])
 		if s.firstRaw {
 			s.text.WriteString(line)
@@ -599,8 +647,15 @@ func nomarkLine(cfg *config.Config, s *state) {
 			nextLine(s)
 			return
 		}
+		if line == "}}}" {
+			s.text.WriteString("}}}")
+			s.html.WriteString("<span class=\"markup\">}}}</span>")
+			nextLine(s)
+			return
+		}
 	}
 
+	prevBlock := s.block
 	checkBlock(s, blockParagraph)
 	markup(cfg, s)
 	nextLine(s)
@@ -609,27 +664,29 @@ func nomarkLine(cfg *config.Config, s *state) {
 		line := s.data[s.index:s.lineEnd]
 		if !isBlank(line) && string(line) != "%%%" {
 			s.text.WriteString("\n")
-			s.html.WriteString("<br />\n")
+			if prevBlock != blockRaw {
+				s.html.WriteString("<br />\n")
+			}
 		}
 	}
 }
 
 func nomark(cfg *config.Config, title string, text string) (string, string, string, string) {
 	d := []byte(text)
-	s := state {
-		data: d,
-		index: 0,
-		text: new(bytes.Buffer),
-		plain: new(bytes.Buffer),
-		html: new(bytes.Buffer),
-		block: blockNone,
-		nextLine: 0,
-		lineEnd: 0,
+	s := state{
+		data:      d,
+		index:     0,
+		text:      new(bytes.Buffer),
+		plain:     new(bytes.Buffer),
+		html:      new(bytes.Buffer),
+		block:     blockNone,
+		nextLine:  0,
+		lineEnd:   0,
 		outerDeco: decoNone,
 		innerDeco: decoNone,
-		prevLine: d[0:0],
-		firstRaw: false,
-		title: "",
+		prevLine:  d[0:0],
+		firstRaw:  false,
+		title:     "",
 	}
 
 	skip(&s)
@@ -638,11 +695,11 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 	for s.index < len(s.data) {
 		s.prevLine = line
 		line = s.data[s.index:s.lineEnd]
-		if s.block != blockRaw && s.block != blockMath && isBlank(line) {
+		if s.block != blockRaw && s.block != blockCode && s.block != blockMath && isBlank(line) {
 			if string(s.prevLine) == "{{{" {
-				blockEnd(&s, blockRaw)
+				blockEnd(&s, blockCode)
 				nextLine(&s)
-				blockBegin(&s, blockRaw)
+				blockBegin(&s, blockCode)
 				s.firstRaw = true
 				continue
 			}
@@ -658,13 +715,11 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 					break
 				}
 			}
-		} else if s.block == blockRaw && string(s.prevLine) == "" && string(line) == "}}}" {
+		} else if s.block == blockCode && string(s.prevLine) == "" && string(line) == "}}}" {
 			blockEnd(&s, blockParagraph)
-			nextLine(&s)
-			blockBegin(&s, blockParagraph)
-			s.text.WriteString("}}}")
-			s.html.WriteString("<span class=\"markup\">}}}</span>")
-		} else if s.block != blockMath && s.block != blockRaw && string(line) == "%%%" {
+			checkBlock(&s, blockParagraph)
+			nomarkLine(cfg, &s)
+		} else if s.block != blockMath && s.block != blockRaw && s.block != blockCode && string(line) == "%%%" {
 			blockEnd(&s, blockMath)
 			nextLine(&s)
 			blockBegin(&s, blockMath)
@@ -683,7 +738,7 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				levelStr := strconv.Itoa(level)
 				var buf bytes.Buffer
 				buf.Write([]byte("!!!"))
-				for i := 0; i <= 3 - level; i += 1 {
+				for i := 0; i <= 3-level; i += 1 {
 					buf.WriteByte('!')
 				}
 				mark := buf.String()
