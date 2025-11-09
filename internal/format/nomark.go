@@ -589,6 +589,8 @@ func isBlank(line string) bool {
 
 var headingRe = regexp.MustCompile("^!!!(!*) (.+?) !!!(!*)$")
 
+const headingMaxLevel = 3
+
 func parseHeading(s *state, line string) (int, string, bool) {
 	if s.prevLine != "" {
 		return 0, "", false
@@ -604,7 +606,7 @@ func parseHeading(s *state, line string) (int, string, bool) {
 	if len(prefix) != len(suffix) {
 		return 0, "", false
 	}
-	level := 4 - len(prefix)
+	level := headingMaxLevel - len(prefix)
 	if level < 1 {
 		return 0, "", false
 	}
@@ -768,7 +770,7 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				levelStr := strconv.Itoa(level)
 				var buf strings.Builder
 				buf.WriteString("!!!")
-				for i := 0; i <= 3-level; i += 1 {
+				for i := 1; i <= headingMaxLevel-level; i += 1 {
 					buf.WriteRune('!')
 				}
 				mark := buf.String()
