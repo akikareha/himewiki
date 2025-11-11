@@ -458,6 +458,9 @@ func wikiLink(s *state) bool {
 
 	s.html.WriteString("<span class=\"markup\">[[</span><a href=\"/")
 	s.html.WriteString(url.PathEscape(name))
+	if strings.IndexByte(name, '.') != -1 {
+		s.html.WriteString(".wiki")
+	}
 	s.html.WriteString("\" class=\"link\">")
 	s.html.WriteString(template.HTMLEscapeString(name))
 	s.html.WriteString("</a><span class=\"markup\">]]</span>")
@@ -770,7 +773,7 @@ func nomark(cfg *config.Config, title string, text string) (string, string, stri
 				levelStr := strconv.Itoa(level)
 				var buf strings.Builder
 				buf.WriteString("!!!")
-				for i := 1; i <= headingMaxLevel-level; i += 1 {
+				for i := 1; i <= headingMaxLevel-level; i++ {
 					buf.WriteRune('!')
 				}
 				mark := buf.String()

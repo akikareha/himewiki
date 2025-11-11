@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
@@ -79,10 +80,16 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 	_, current, _ := data.Load(params.DbName)
 	diffText := util.Diff(current, content)
 
+	searchName := params.Name
+	if strings.HasSuffix(searchName, ".wiki") {
+		searchName = searchName[:len(searchName) - 5]
+	}
+
 	tmpl.Execute(w, struct {
 		SiteName string
 		Name string
 		Title string
+		SearchName string
 		Rendered template.HTML
 		ID int
 		Diff string
@@ -90,6 +97,7 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 		SiteName: cfg.Site.Name,
 		Name: params.Name,
 		Title: title,
+		SearchName: searchName,
 		Rendered: template.HTML(rendered),
 		ID: *params.ID,
 		Diff: diffText,

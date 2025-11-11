@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
@@ -31,6 +32,11 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		diffText = util.Diff(prev, content)
 	}
 
+	searchName := params.Name
+	if strings.HasSuffix(searchName, ".wiki") {
+		searchName = searchName[:len(searchName) - 5]
+	}
+
 	tmpl.Execute(w, struct {
 		Base string
 		SiteName string
@@ -38,6 +44,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Name string
 		Summary string
 		Title string
+		SearchName string
 		Rendered template.HTML
 		Diff string
 	}{
@@ -47,6 +54,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		Name: params.Name,
 		Summary: summary,
 		Title: title,
+		SearchName: searchName,
 		Rendered: template.HTML(rendered),
 		Diff: diffText,
 	})
@@ -114,6 +122,11 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		diffText = util.Diff(current, normalized)
 	}
 
+	searchName := params.Name
+	if strings.HasSuffix(searchName, ".wiki") {
+		searchName = searchName[:len(searchName) - 5]
+	}
+
 	tmpl := util.NewTemplate("edit.html")
 	tmpl.Execute(w, struct {
 		SiteName string
@@ -122,6 +135,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		RevisionID int
 		Text string
 		Title string
+		SearchName string
 		Rendered template.HTML 
 		Diff string
 	}{
@@ -131,6 +145,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		RevisionID: revisionID,
 		Text: normalized,
 		Title: title,
+		SearchName: searchName,
 		Rendered: template.HTML(rendered),
 		Diff: diffText,
 	})

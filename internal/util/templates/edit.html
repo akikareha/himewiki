@@ -17,7 +17,7 @@
 <body>
 
 {{if .Previewed}}
-<h1>Preview, Not Saved - <a href="/?a=search&t=content&w={{.Name | urlquery}}">{{.Title}}</a></h1>
+<h1>Preview, Not Saved - <a href="/?a=search&t=content&w={{.SearchName | urlquery}}">{{.Title}}</a></h1>
 
 <div>
 {{.Rendered}}

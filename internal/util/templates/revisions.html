@@ -22,7 +22,7 @@
 <div><code>
 {{.Diff | fmtdiff}}
 </code></div>
-<form action="/{{.Name | pathescape}}" method="GET">
+<form action="/{{$.Name | pathescape}}" method="GET">
 <input type="hidden" name="a" value="rev" />
 <input type="hidden" name="i" value="{{.ID}}" />
 <input type="submit" value="View" />
@@ -33,7 +33,6 @@
 No revisions found.
 </div>
 {{end}}
-</ul>
 
 <div class="menu">
 <br />

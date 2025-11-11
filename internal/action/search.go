@@ -3,6 +3,7 @@ package action
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
@@ -27,6 +28,12 @@ func Search(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		} else {
 			http.NotFound(w, r)
 			return
+		}
+	}
+	for i := 0; i < len(results); i++ {
+		r := results[i]
+		if strings.IndexByte(r, '.') != -1 {
+			results[i] = r + ".wiki"
 		}
 	}
 
