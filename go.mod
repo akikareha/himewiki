@@ -6,8 +6,9 @@ toolchain go1.24.7
 
 require (
 	github.com/jackc/pgx/v5 v5.7.6
-	github.com/openai/openai-go/v2 v2.4.2
+	github.com/openai/openai-go/v3 v3.8.1
 	github.com/pmezard/go-difflib v1.0.0
+	golang.org/x/image v0.33.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -22,7 +23,6 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/image v0.31.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/text v0.29.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 )
