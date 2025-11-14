@@ -670,13 +670,20 @@ func nomarkLine(cfg *config.Config, s *state) {
 	if strings.HasPrefix(line, " ") {
 		if s.block == blockRaw {
 			s.text.WriteString("\n")
+			s.text.WriteString(line)
+
 			s.html.WriteString("\n")
+			s.html.WriteString(template.HTMLEscapeString(line))
+
+			nextLine(s)
+			return
+		} else if s.prevLine == "" {
+			ensureBlock(s, blockRaw)
+			s.text.WriteString(line)
+			s.html.WriteString(template.HTMLEscapeString(line))
+			nextLine(s)
+			return
 		}
-		ensureBlock(s, blockRaw)
-		s.text.WriteString(line)
-		s.html.WriteString(template.HTMLEscapeString(line))
-		nextLine(s)
-		return
 	}
 
 	if line == "{{{" {
@@ -693,6 +700,15 @@ func nomarkLine(cfg *config.Config, s *state) {
 
 	prevBlock := s.block
 	ensureBlock(s, blockParagraph)
+	for s.index < s.lineEnd {
+		c := s.input[s.index]
+		if c != ' ' {
+			break
+		}
+		s.text.WriteString(" ")
+		s.html.WriteString("&nbsp;")
+		s.index += 1
+	}
 	markup(cfg, s)
 	nextLine(s)
 

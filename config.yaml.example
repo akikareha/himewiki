@@ -151,5 +151,5 @@ gnome:
     - Prefer clarity over formality if both cannot be achieved.
   prompt: ""
   temperature: 0.5
-  ratio: 3
-  recent: 6
+  ratio: 10
+  recent: 10
