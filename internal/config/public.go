@@ -12,36 +12,36 @@ type Public struct {
 	}
 
 	Image struct {
-		Domains []string
+		Domains    []string
 		Extensions []string
 	}
 
 	Filter struct {
-		Agent string
-		System string
-		Prompt string
+		Agent       string
+		System      string
+		Prompt      string
 		Temperature float64
-		Common string
+		Common      string
 	}
 
 	ImageFilter struct {
-		Agent string
+		Agent     string
 		MaxLength int
-		MaxSize int
+		MaxSize   int
 	}
 
 	Gnome struct {
-		Agent string
-		System string
-		Prompt string
+		Agent       string
+		System      string
+		Prompt      string
 		Temperature float64
-		Ratio int
-		Recent int
+		Ratio       int
+		Recent      int
 	}
 }
 
 func Publish(cfg *Config) Public {
-	return Public {
+	return Public{
 
 		Site: struct {
 			Base string
@@ -60,51 +60,51 @@ func Publish(cfg *Config) Public {
 		},
 
 		Image: struct {
-			Domains []string
+			Domains    []string
 			Extensions []string
 		}{
-			Domains: cfg.Image.Domains,
+			Domains:    cfg.Image.Domains,
 			Extensions: cfg.Image.Extensions,
 		},
 
 		Filter: struct {
-			Agent string
-			System string
-			Prompt string
+			Agent       string
+			System      string
+			Prompt      string
 			Temperature float64
-			Common string
+			Common      string
 		}{
-			Agent: cfg.Filter.Agent,
-			System: cfg.Filter.System,
-			Prompt: cfg.Filter.Prompt,
+			Agent:       cfg.Filter.Agent,
+			System:      cfg.Filter.System,
+			Prompt:      cfg.Filter.Prompt,
 			Temperature: cfg.Filter.Temperature,
-			Common: cfg.Filter.Common,
+			Common:      cfg.Filter.Common,
 		},
 
 		ImageFilter: struct {
-			Agent string
+			Agent     string
 			MaxLength int
-			MaxSize int
+			MaxSize   int
 		}{
-			Agent: cfg.ImageFilter.Agent,
+			Agent:     cfg.ImageFilter.Agent,
 			MaxLength: cfg.ImageFilter.MaxLength,
-			MaxSize: cfg.ImageFilter.MaxSize,
+			MaxSize:   cfg.ImageFilter.MaxSize,
 		},
 
 		Gnome: struct {
-			Agent string
-			System string
-			Prompt string
+			Agent       string
+			System      string
+			Prompt      string
 			Temperature float64
-			Ratio int
-			Recent int
+			Ratio       int
+			Recent      int
 		}{
-			Agent: cfg.Gnome.Agent,
-			System: cfg.Gnome.System,
-			Prompt: cfg.Gnome.Prompt,
+			Agent:       cfg.Gnome.Agent,
+			System:      cfg.Gnome.System,
+			Prompt:      cfg.Gnome.Prompt,
 			Temperature: cfg.Gnome.Temperature,
-			Ratio: cfg.Gnome.Ratio,
-			Recent: cfg.Gnome.Recent,
+			Ratio:       cfg.Gnome.Ratio,
+			Recent:      cfg.Gnome.Recent,
 		},
 	}
 }

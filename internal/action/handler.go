@@ -10,17 +10,17 @@ import (
 )
 
 type Params struct {
-	Name string
+	Name   string
 	DbName string
-	Ext string
+	Ext    string
 	Action string
-	ID *int
+	ID     *int
 }
 
 func parse(cfg *config.Config, r *http.Request) Params {
 	name := strings.TrimPrefix(r.URL.Path, "/")
 	if name == "" {
-	  name = cfg.Wiki.Front
+		name = cfg.Wiki.Front
 	}
 	ext := filepath.Ext(name)
 	if ext == "" {
@@ -30,7 +30,7 @@ func parse(cfg *config.Config, r *http.Request) Params {
 	}
 	dbName := name
 	if ext == ".wiki" {
-		dbName = name[:len(name) - len(ext)]
+		dbName = name[:len(name)-len(ext)]
 	}
 	if ext == "" {
 		ext = ".wiki"
@@ -47,11 +47,11 @@ func parse(cfg *config.Config, r *http.Request) Params {
 	}
 
 	return Params{
-		Name: name,
+		Name:   name,
 		DbName: dbName,
-		Ext: ext,
+		Ext:    ext,
 		Action: action,
-		ID: idRef,
+		ID:     idRef,
 	}
 }
 

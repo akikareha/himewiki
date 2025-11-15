@@ -27,24 +27,24 @@ func Revisions(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 	}
 
 	tmpl := util.NewTemplate("revisions.html")
-tmpl.Execute(w, struct {
-		SiteName string
-		Name string
-		Title string
+	tmpl.Execute(w, struct {
+		SiteName  string
+		Name      string
+		Title     string
 		Revisions []data.Revision
-		NextPage int
+		NextPage  int
 	}{
-		SiteName: cfg.Site.Name,
-		Name: params.Name,
-		Title: params.DbName,
+		SiteName:  cfg.Site.Name,
+		Name:      params.Name,
+		Title:     params.DbName,
 		Revisions: revs,
-		NextPage: page + 1,
+		NextPage:  page + 1,
 	})
 }
 
 func Revert(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
 	if params.ID == nil {
-		http.Error(w, "Bad revision id", 400);
+		http.Error(w, "Bad revision id", 400)
 		return
 	}
 
@@ -59,12 +59,12 @@ func Revert(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		return
 	}
 
-	http.Redirect(w, r, "/" + url.PathEscape(params.Name), http.StatusFound)
+	http.Redirect(w, r, "/"+url.PathEscape(params.Name), http.StatusFound)
 }
 
 func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
 	if params.ID == nil {
-		http.Error(w, "Bad revision id", 400);
+		http.Error(w, "Bad revision id", 400)
 		return
 	}
 
@@ -82,24 +82,24 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 
 	searchName := params.Name
 	if strings.HasSuffix(searchName, ".wiki") {
-		searchName = searchName[:len(searchName) - 5]
+		searchName = searchName[:len(searchName)-5]
 	}
 
 	tmpl.Execute(w, struct {
-		SiteName string
-		Name string
-		Title string
+		SiteName   string
+		Name       string
+		Title      string
 		SearchName string
-		Rendered template.HTML
-		ID int
-		Diff string
+		Rendered   template.HTML
+		ID         int
+		Diff       string
 	}{
-		SiteName: cfg.Site.Name,
-		Name: params.Name,
-		Title: title,
+		SiteName:   cfg.Site.Name,
+		Name:       params.Name,
+		Title:      title,
 		SearchName: searchName,
-		Rendered: template.HTML(rendered),
-		ID: *params.ID,
-		Diff: diffText,
+		Rendered:   template.HTML(rendered),
+		ID:         *params.ID,
+		Diff:       diffText,
 	})
 }

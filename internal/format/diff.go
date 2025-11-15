@@ -12,7 +12,7 @@ func detectLine(data []byte) (int, int) {
 	}
 	lineEnd := lineFeed
 	if lineEnd > 0 {
-		c := data[lineEnd - 1]
+		c := data[lineEnd-1]
 		if c == '\r' {
 			lineEnd -= 1
 		}
@@ -40,7 +40,7 @@ func Diff(text string) string {
 		}
 
 		if len(line) < 1 {
-			html.WriteString("<br />\n");
+			html.WriteString("<br />\n")
 		} else {
 			c := line[0]
 			htmlLine := template.HTMLEscapeString(string(line))

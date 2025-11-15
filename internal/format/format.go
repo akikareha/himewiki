@@ -35,8 +35,8 @@ func Summarize(s string, n int) string {
 	long := false
 	space := false
 	i := 0
-	for _, r := range(s) {
-		if i >= n - 2 {
+	for _, r := range s {
+		if i >= n-2 {
 			long = true
 			break
 		}

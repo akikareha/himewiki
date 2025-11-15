@@ -14,17 +14,17 @@ type Config struct {
 	} `yaml:"app"`
 
 	Database struct {
-		Host string `yaml:"host"`
-		Port int    `yaml:"port"`
-		User string `yaml:"user"`
+		Host     string `yaml:"host"`
+		Port     int    `yaml:"port"`
+		User     string `yaml:"user"`
 		Password string `yaml:"password"`
-		Name string `yaml:"name"`
+		Name     string `yaml:"name"`
 		SSLMode  string `yaml:"sslmode"`
 	} `yaml:"database"`
 
 	Vacuum struct {
-		CheckEvery int `yaml:"check-every"`
-		Threshold int64 `yaml:"threshold"`
+		CheckEvery     int   `yaml:"check-every"`
+		Threshold      int64 `yaml:"threshold"`
 		ImageThreshold int64 `yaml:"image-threshold"`
 	} `yaml:"vacuum"`
 
@@ -39,34 +39,34 @@ type Config struct {
 	} `yaml:"wiki"`
 
 	Image struct {
-		Domains []string `yaml:"domains"`
+		Domains    []string `yaml:"domains"`
 		Extensions []string `yaml:"extensions"`
 	} `yaml:"image"`
 
 	Filter struct {
-		Agent string `yaml:"agent"`
-		Key string `yaml:"key"`
-		System string `yaml:"system"`
-		Prompt string `yaml:"prompt"`
+		Agent       string  `yaml:"agent"`
+		Key         string  `yaml:"key"`
+		System      string  `yaml:"system"`
+		Prompt      string  `yaml:"prompt"`
 		Temperature float64 `yaml:"temperature"`
-		Common string `yaml:"common"`
+		Common      string  `yaml:"common"`
 	} `yaml:"filter"`
 
 	ImageFilter struct {
-		Agent string `yaml:"agent"`
-		Key string `yaml:"key"`
-		MaxLength int `yaml:"max-length"`
-		MaxSize int `yaml:"max-size"`
+		Agent     string `yaml:"agent"`
+		Key       string `yaml:"key"`
+		MaxLength int    `yaml:"max-length"`
+		MaxSize   int    `yaml:"max-size"`
 	} `yaml:"image-filter"`
 
 	Gnome struct {
-		Agent string `yaml:"agent"`
-		Key string `yaml:"key"`
-		System string `yaml:"system"`
-		Prompt string `yaml:"prompt"`
+		Agent       string  `yaml:"agent"`
+		Key         string  `yaml:"key"`
+		System      string  `yaml:"system"`
+		Prompt      string  `yaml:"prompt"`
 		Temperature float64 `yaml:"temperature"`
-		Ratio int `yaml:"ratio"`
-		Recent int `yaml:"recent"`
+		Ratio       int     `yaml:"ratio"`
+		Recent      int     `yaml:"recent"`
 	} `yaml:"gnome"`
 }
 

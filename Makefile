@@ -8,3 +8,9 @@ clean:
 
 run:
 	go run ./cmd/himewiki
+
+fmt:
+	go fmt ./...
+
+test:
+	go test ./...

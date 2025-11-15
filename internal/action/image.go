@@ -87,13 +87,13 @@ func Upload(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 
 	tmpl := util.NewTemplate("upload.html")
 	tmpl.Execute(w, struct {
-		Base string
+		Base     string
 		SiteName string
-		Name string
+		Name     string
 	}{
-		Base: cfg.Site.Base,
+		Base:     cfg.Site.Base,
 		SiteName: cfg.Site.Name,
-		Name: name,
+		Name:     name,
 	})
 }
 
@@ -114,14 +114,14 @@ func AllImages(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 
 	tmpl := util.NewTemplate("allimgs.html")
 	tmpl.Execute(w, struct {
-		Base string
+		Base     string
 		SiteName string
-		Images []string
+		Images   []string
 		NextPage int
 	}{
-		Base: cfg.Site.Base,
+		Base:     cfg.Site.Base,
 		SiteName: cfg.Site.Name,
-		Images: images,
+		Images:   images,
 		NextPage: page + 1,
 	})
 }

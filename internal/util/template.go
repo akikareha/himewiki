@@ -16,9 +16,9 @@ func formatDiff(text string) template.HTML {
 }
 
 func NewTemplate(name string) *template.Template {
-	funcMap := template.FuncMap {
+	funcMap := template.FuncMap{
 		"pathescape": url.PathEscape,
-		"fmtdiff": formatDiff,
+		"fmtdiff":    formatDiff,
 	}
-	return template.Must(template.New(name).Funcs(funcMap).ParseFS(tmplFS, "templates/" + name))
+	return template.Must(template.New(name).Funcs(funcMap).ParseFS(tmplFS, "templates/"+name))
 }

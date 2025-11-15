@@ -2,9 +2,9 @@ package action
 
 import (
 	"github.com/akikareha/himewiki/internal/config"
+	"github.com/akikareha/himewiki/internal/data"
 	"github.com/akikareha/himewiki/internal/filter"
 	"github.com/akikareha/himewiki/internal/format"
-	"github.com/akikareha/himewiki/internal/data"
 )
 
 func runGnome(cfg *config.Config, targetRecent int) {
@@ -15,7 +15,7 @@ func runGnome(cfg *config.Config, targetRecent int) {
 	if len(recentNames) < 1 {
 		return
 	}
-	targetName := recentNames[targetRecent % len(recentNames)]
+	targetName := recentNames[targetRecent%len(recentNames)]
 
 	revisionID, content, err := data.Load(targetName)
 	if err != nil {

@@ -6,11 +6,11 @@ import (
 
 func Diff(oldText, newText string) string {
 	diff := difflib.UnifiedDiff{
-		A: difflib.SplitLines(oldText),
-		B: difflib.SplitLines(newText),
+		A:        difflib.SplitLines(oldText),
+		B:        difflib.SplitLines(newText),
 		FromFile: "old",
-		ToFile:  "new",
-		Context: 3,
+		ToFile:   "new",
+		Context:  3,
 	}
 	text, _ := difflib.GetUnifiedDiffString(diff)
 	return text

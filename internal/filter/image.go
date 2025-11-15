@@ -29,7 +29,7 @@ func imageWithChatGPT(cfg *config.Config, title string, data []byte) ([]byte, er
 	ext := filepath.Ext(title)
 	extFound := false
 	for _, extension := range cfg.Image.Extensions {
-		if ext == "." + extension {
+		if ext == "."+extension {
 			extFound = true
 			break
 		}
@@ -48,7 +48,7 @@ func imageWithChatGPT(cfg *config.Config, title string, data []byte) ([]byte, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
-	if "image/" + format != mimeType {
+	if "image/"+format != mimeType {
 		return nil, fmt.Errorf("invalid image format")
 	}
 
@@ -98,15 +98,15 @@ func imageWithChatGPT(cfg *config.Config, title string, data []byte) ([]byte, er
 
 	resp, err := client.Moderations.New(
 		context.Background(),
-		openai.ModerationNewParams {
+		openai.ModerationNewParams{
 			Model: openai.ModerationModelOmniModerationLatest,
-			Input: openai.ModerationNewParamsInputUnion {
-				OfModerationMultiModalArray: []openai.ModerationMultiModalInputUnionParam {
+			Input: openai.ModerationNewParamsInputUnion{
+				OfModerationMultiModalArray: []openai.ModerationMultiModalInputUnionParam{
 					openai.ModerationMultiModalInputParamOfText(
-							title,
+						title,
 					),
 					openai.ModerationMultiModalInputParamOfImageURL(
-						openai.ModerationImageURLInputImageURLParam {
+						openai.ModerationImageURLInputImageURLParam{
 							URL: dataURI,
 						},
 					),

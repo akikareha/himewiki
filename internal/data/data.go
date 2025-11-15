@@ -133,13 +133,13 @@ func Connect(cfg *config.Config) *pgxpool.Pool {
 }
 
 type Info struct {
-	BootCount int64
-	PageSaveCount int64
-	ImageSaveCount int64
-	Size string
-	PageCount int
-	RevisionCount int
-	ImageCount int
+	BootCount          int64
+	PageSaveCount      int64
+	ImageSaveCount     int64
+	Size               string
+	PageCount          int
+	RevisionCount      int
+	ImageCount         int
 	ImageRevisionCount int
 }
 
@@ -176,14 +176,14 @@ func Stat() Info {
 		imageRevisionCount = -1
 	}
 
-	return Info {
-		BootCount: bootCount,
-		PageSaveCount: pageSaveCount,
-		ImageSaveCount: imageSaveCount,
-		Size: size,
-		PageCount: pageCount,
-		RevisionCount: revisionCount,
-		ImageCount: imageCount,
+	return Info{
+		BootCount:          bootCount,
+		PageSaveCount:      pageSaveCount,
+		ImageSaveCount:     imageSaveCount,
+		Size:               size,
+		PageCount:          pageCount,
+		RevisionCount:      revisionCount,
+		ImageCount:         imageCount,
 		ImageRevisionCount: imageRevisionCount,
 	}
 }
@@ -290,7 +290,7 @@ func Save(cfg *config.Config, name, content string, baseRevID int) (int64, error
 		return 0, err
 	}
 
-	if pageCount % int64(cfg.Vacuum.CheckEvery) == 0 {
+	if pageCount%int64(cfg.Vacuum.CheckEvery) == 0 {
 		var sizeBytes int64
 		err = db.QueryRow(ctx, `
 			SELECT pg_total_relation_size('pages') +
@@ -418,7 +418,7 @@ func Recent(page int, perPage int) ([]RecentRecord, error) {
 		} else {
 			diffText = util.Diff("", content)
 		}
-		record := RecentRecord{ Name: name, Diff: diffText }
+		record := RecentRecord{Name: name, Diff: diffText}
 		results = append(results, record)
 	}
 	return results, nil
@@ -451,10 +451,10 @@ func RecentNames(limit int) ([]string, error) {
 }
 
 type Revision struct {
-	ID int
-	Name string
-	Content string
-	Diff string
+	ID        int
+	Name      string
+	Content   string
+	Diff      string
 	CreatedAt time.Time
 }
 
@@ -473,7 +473,7 @@ func LoadRevisions(name string, page int, perPage int) ([]Revision, error) {
 		 WHERE name=$1
 		 ORDER BY created_at DESC
 		 LIMIT $2 OFFSET $3
-		`, name, perPage + 1, offset)
+		`, name, perPage+1, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -488,11 +488,11 @@ func LoadRevisions(name string, page int, perPage int) ([]Revision, error) {
 		revs = append(revs, r)
 	}
 
-	for i := 0; i < len(revs) - 1; i++ {
-		revs[i].Diff = util.Diff(revs[i + 1].Content, revs[i].Content)
+	for i := 0; i < len(revs)-1; i++ {
+		revs[i].Diff = util.Diff(revs[i+1].Content, revs[i].Content)
 	}
-	if len(revs) > 0 && len(revs) < perPage + 1 {
-		revs[len(revs) - 1].Diff = util.Diff("", revs[len(revs) - 1].Content)
+	if len(revs) > 0 && len(revs) < perPage+1 {
+		revs[len(revs)-1].Diff = util.Diff("", revs[len(revs)-1].Content)
 	}
 	if len(revs) > perPage {
 		revs = revs[:perPage]

@@ -66,7 +66,7 @@ func SaveImage(cfg *config.Config, name string, content []byte) error {
 		return err
 	}
 
-	if imageCount % int64(cfg.Vacuum.CheckEvery) == 0 {
+	if imageCount%int64(cfg.Vacuum.CheckEvery) == 0 {
 		var sizeBytes int64
 		err = db.QueryRow(ctx, `
 			SELECT pg_total_relation_size('images') +

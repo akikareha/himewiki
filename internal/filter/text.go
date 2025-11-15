@@ -47,7 +47,7 @@ func withChatGPT(cfg *config.Config, title string, content string) (string, erro
 	if statusIndex == -1 {
 		return "", fmt.Errorf("no status in response")
 	}
-	answer = answer[statusIndex + 7:]
+	answer = answer[statusIndex+7:]
 	statusEndIndex := strings.Index(answer, "\n")
 	if statusEndIndex == -1 {
 		return "", fmt.Errorf("no line end for status in response")
@@ -62,7 +62,7 @@ func withChatGPT(cfg *config.Config, title string, content string) (string, erro
 	if contentIndex == -1 {
 		return "", fmt.Errorf("no content in response")
 	}
-	answer = answer[contentIndex + 8:]
+	answer = answer[contentIndex+8:]
 	contentEndIndex := strings.Index(answer, "\n")
 	if contentEndIndex == -1 {
 		return "", fmt.Errorf("no line end for content in response")

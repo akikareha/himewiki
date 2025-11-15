@@ -1,4 +1,4 @@
-package action 
+package action
 
 import (
 	"html/template"
@@ -34,29 +34,29 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 
 	searchName := params.Name
 	if strings.HasSuffix(searchName, ".wiki") {
-		searchName = searchName[:len(searchName) - 5]
+		searchName = searchName[:len(searchName)-5]
 	}
 
 	tmpl.Execute(w, struct {
-		Base string
-		SiteName string
-		Card string
-		Name string
-		Summary string
-		Title string
+		Base       string
+		SiteName   string
+		Card       string
+		Name       string
+		Summary    string
+		Title      string
 		SearchName string
-		Rendered template.HTML
-		Diff string
+		Rendered   template.HTML
+		Diff       string
 	}{
-		Base: cfg.Site.Base,
-		SiteName: cfg.Site.Name,
-		Card: cfg.Site.Card,
-		Name: params.Name,
-		Summary: summary,
-		Title: title,
+		Base:       cfg.Site.Base,
+		SiteName:   cfg.Site.Name,
+		Card:       cfg.Site.Card,
+		Name:       params.Name,
+		Summary:    summary,
+		Title:      title,
 		SearchName: searchName,
-		Rendered: template.HTML(rendered),
-		Diff: diffText,
+		Rendered:   template.HTML(rendered),
+		Diff:       diffText,
 	})
 }
 
@@ -106,7 +106,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		}
 
 		if cfg.Gnome.Agent != "nil" {
-			if pageCount % int64(cfg.Gnome.Ratio) == 0 {
+			if pageCount%int64(cfg.Gnome.Ratio) == 0 {
 				targetRecent := (pageCount / int64(cfg.Gnome.Ratio)) % int64(cfg.Gnome.Recent)
 				go func() {
 					runGnome(cfg, int(targetRecent))
@@ -114,7 +114,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 			}
 		}
 
-		http.Redirect(w, r, "/"+url.PathEscape(params.Name) + "?b=diff", http.StatusFound)
+		http.Redirect(w, r, "/"+url.PathEscape(params.Name)+"?b=diff", http.StatusFound)
 		return
 	} else if preview != "" {
 		previewed = true
@@ -124,30 +124,30 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 
 	searchName := params.Name
 	if strings.HasSuffix(searchName, ".wiki") {
-		searchName = searchName[:len(searchName) - 5]
+		searchName = searchName[:len(searchName)-5]
 	}
 
 	tmpl := util.NewTemplate("edit.html")
 	tmpl.Execute(w, struct {
-		SiteName string
-		Name string
-		Previewed bool
+		SiteName   string
+		Name       string
+		Previewed  bool
 		RevisionID int
-		Text string
-		Title string
+		Text       string
+		Title      string
 		SearchName string
-		Rendered template.HTML 
-		Diff string
+		Rendered   template.HTML
+		Diff       string
 	}{
-		SiteName: cfg.Site.Name,
-		Name: params.Name,
-		Previewed: previewed,
+		SiteName:   cfg.Site.Name,
+		Name:       params.Name,
+		Previewed:  previewed,
 		RevisionID: revisionID,
-		Text: normalized,
-		Title: title,
+		Text:       normalized,
+		Title:      title,
 		SearchName: searchName,
-		Rendered: template.HTML(rendered),
-		Diff: diffText,
+		Rendered:   template.HTML(rendered),
+		Diff:       diffText,
 	})
 }
 
@@ -169,11 +169,11 @@ func All(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Par
 	tmpl := util.NewTemplate("all.html")
 	tmpl.Execute(w, struct {
 		SiteName string
-		Pages []string
+		Pages    []string
 		NextPage int
 	}{
 		SiteName: cfg.Site.Name,
-		Pages: pages,
+		Pages:    pages,
 		NextPage: page + 1,
 	})
 }
@@ -196,11 +196,11 @@ func Recent(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 	tmpl := util.NewTemplate("recent.html")
 	tmpl.Execute(w, struct {
 		SiteName string
-		Records []data.RecentRecord
+		Records  []data.RecentRecord
 		NextPage int
 	}{
 		SiteName: cfg.Site.Name,
-		Records: records,
+		Records:  records,
 		NextPage: page + 1,
 	})
 }

@@ -44,15 +44,15 @@ func Search(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 	tmpl := util.NewTemplate("search.html")
 	tmpl.Execute(w, struct {
 		SiteName string
-		Type string
-		Word string
-		Results []string
+		Type     string
+		Word     string
+		Results  []string
 		NextPage int
 	}{
 		SiteName: cfg.Site.Name,
-		Type: searchType,
-		Word:    word,
-		Results: results,
+		Type:     searchType,
+		Word:     word,
+		Results:  results,
 		NextPage: page + 1,
 	})
 }
