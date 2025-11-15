@@ -4,7 +4,7 @@ import "testing"
 
 var mockCfg = formatConfig{
 	image: imageConfig{
-		domains: []string{"example.org", "example.net"},
+		domains:    []string{"example.org", "example.net"},
 		extensions: []string{"png", "jpeg"},
 	},
 }

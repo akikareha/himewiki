@@ -1,66 +1,60 @@
 package format
 
 import (
-	"bytes"
 	"html/template"
+	"strings"
 )
 
-func detectLine(data []byte) (int, int) {
-	lineFeed := bytes.IndexByte(data, '\n')
-	if lineFeed == -1 {
-		lineFeed = len(data)
-	}
-	lineEnd := lineFeed
-	if lineEnd > 0 {
-		c := data[lineEnd-1]
-		if c == '\r' {
-			lineEnd -= 1
-		}
-	}
-	nextLine := lineFeed + 1
-	return lineEnd, nextLine
-}
-
+// Diff formats diff text to HTML.
 func Diff(text string) string {
-	data := []byte(text)
 	index := 0
-	var html bytes.Buffer
-	lineNo := 0
 
-	for index < len(data) {
-		lineEnd, nextLine := detectLine(data[index:])
-		lineEnd += index
-		nextLine += index
-		line := data[index:lineEnd]
-		lineNo += 1
+	// skip headers
+	lineNumber := 0
+	for index < len(text) {
+		_, index = indexLineEnd(text, index)
 
-		if lineNo < 3 {
-			index = nextLine
-			continue
+		lineNumber += 1
+		if lineNumber >= 3 {
+			break
 		}
+	}
+
+	var html strings.Builder
+	for index < len(text) {
+		lineEnd, nextLine := indexLineEnd(text, index)
+		line := text[index:lineEnd]
+		index = nextLine
 
 		if len(line) < 1 {
 			html.WriteString("<br />\n")
-		} else {
-			c := line[0]
-			htmlLine := template.HTMLEscapeString(string(line))
-			if c == '+' {
-				html.WriteString("<span class=\"plus\">+</span>")
-				html.WriteString("<span class=\"plus-line\">" + htmlLine[1:] + "</span><br />\n")
-			} else if c == '-' {
-				html.WriteString("<span class=\"minus\">-</span>")
-				html.WriteString("<span class=\"minus-line\">" + htmlLine[1:] + "</span><br />\n")
-			} else if c == '@' {
-				html.WriteString("<span class=\"hunk\">@")
-				html.WriteString(htmlLine[1:] + "</span><br />\n")
-			} else if c == ' ' {
-				html.WriteString("&nbsp;")
-				html.WriteString(htmlLine[1:] + "<br />\n")
-			} else {
-				html.WriteString(htmlLine + "<br />\n")
-			}
+			continue
 		}
-		index = nextLine
+
+		c := line[0]
+		htmlLine := template.HTMLEscapeString(string(line))
+		if c == '+' {
+			html.WriteString("<span class=\"plus\">+</span>")
+			html.WriteString("<span class=\"plus-line\">")
+			html.WriteString(htmlLine[1:])
+			html.WriteString("</span><br />\n")
+		} else if c == '-' {
+			html.WriteString("<span class=\"minus\">-</span>")
+			html.WriteString("<span class=\"minus-line\">")
+			html.WriteString(htmlLine[1:])
+			html.WriteString("</span><br />\n")
+		} else if c == '@' {
+			html.WriteString("<span class=\"hunk\">@")
+			html.WriteString(htmlLine[1:])
+			html.WriteString("</span><br />\n")
+		} else if c == ' ' {
+			html.WriteString("&nbsp;")
+			html.WriteString(htmlLine[1:])
+			html.WriteString("<br />\n")
+		} else {
+			html.WriteString(htmlLine)
+			html.WriteString("<br />\n")
+		}
 	}
 
 	return html.String()
