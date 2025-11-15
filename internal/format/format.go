@@ -13,16 +13,18 @@ func Apply(cfg *config.Config, title string, text string) (string, string, strin
 	}
 	head := text[0]
 
+	fcfg := toFormatConfig(cfg)
+
 	// Detect markup by very first character of input text.
 	// * '=' : Creole
 	// * '#' : Markdown
 	// * Others : Nomark
 	if head == '=' {
-		return creole(cfg, title, text)
+		return creole(fcfg, title, text)
 	} else if head == '#' {
-		return markdown(cfg, title, text)
+		return markdown(fcfg, title, text)
 	} else {
-		return nomark(cfg, title, text)
+		return nomark(fcfg, title, text)
 	}
 }
 

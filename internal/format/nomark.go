@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/akikareha/himewiki/internal/config"
 )
 
 type blockMode int
@@ -205,7 +203,7 @@ func ensureBlock(s *state, block blockMode) {
 	openBlock(s, block)
 }
 
-func math(cfg *config.Config, s *state) bool {
+func math(cfg formatConfig, s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "%%") {
 		return false
@@ -233,7 +231,7 @@ func math(cfg *config.Config, s *state) bool {
 	return true
 }
 
-func strong(cfg *config.Config, s *state) bool {
+func strong(cfg formatConfig, s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "**") {
 		return false
@@ -289,7 +287,7 @@ func strong(cfg *config.Config, s *state) bool {
 	return true
 }
 
-func em(cfg *config.Config, s *state) bool {
+func em(cfg formatConfig, s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "//") {
 		return false
@@ -479,7 +477,7 @@ func nonURLIndex(line string) int {
 	return len(line)
 }
 
-func link(cfg *config.Config, s *state) bool {
+func link(cfg formatConfig, s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "https:") {
 		return false
@@ -498,7 +496,7 @@ func link(cfg *config.Config, s *state) bool {
 		ext = ext[1:]
 	}
 	extFound := false
-	for _, extension := range cfg.Image.Extensions {
+	for _, extension := range cfg.image.extensions {
 		if ext == extension {
 			extFound = true
 			break
@@ -506,7 +504,7 @@ func link(cfg *config.Config, s *state) bool {
 	}
 	domainFound := false
 	if extFound {
-		for _, domain := range cfg.Image.Domains {
+		for _, domain := range cfg.image.domains {
 			if u.Host == domain {
 				domainFound = true
 				break
@@ -618,7 +616,7 @@ func parseHeading(s *state, line string) (int, string, bool) {
 	return level, title, true
 }
 
-func markup(cfg *config.Config, s *state) {
+func markup(cfg formatConfig, s *state) {
 	for s.index < s.lineEnd {
 		if math(cfg, s) {
 			continue
@@ -642,7 +640,7 @@ func markup(cfg *config.Config, s *state) {
 	}
 }
 
-func nomarkLine(cfg *config.Config, s *state) {
+func nomarkLine(cfg formatConfig, s *state) {
 	line := s.input[s.index:s.lineEnd]
 
 	if s.block == blockCode {
@@ -725,7 +723,7 @@ func nomarkLine(cfg *config.Config, s *state) {
 	skipLastBlanks(s)
 }
 
-func nomark(cfg *config.Config, title string, text string) (string, string, string, string) {
+func nomark(cfg formatConfig, title string, text string) (string, string, string, string) {
 	s := state{
 		input:     text,
 		index:     0,
