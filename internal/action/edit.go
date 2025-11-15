@@ -23,7 +23,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 
 	tmpl := util.NewTemplate("view.html")
 	title, _, plain, rendered := format.Apply(cfg, params.DbName, content)
-	summary := format.Summarize(plain, 144)
+	summary := format.TrimForSummary(plain, 144)
 
 	subAction := r.URL.Query().Get("b")
 	diffText := ""

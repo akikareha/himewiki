@@ -6,40 +6,49 @@ import (
 	"github.com/akikareha/himewiki/internal/config"
 )
 
-// Returns title, wiki text, plain text, HTML
+// Apply applies wiki formatting on input text
+// and returns title, wiki text, plain text, HTML.
 func Apply(cfg *config.Config, title string, text string) (string, string, string, string) {
 	if len(text) < 1 {
-		return title, text, text, ""
+		return title, "", "", ""
 	}
 	head := text[0]
 
-	fcfg := toFormatConfig(cfg)
+	fc := toFormatConfig(cfg)
 
 	// Detect markup by very first character of input text.
 	// * '=' : Creole
 	// * '#' : Markdown
 	// * Others : Nomark
 	if head == '=' {
-		return creole(fcfg, title, text)
+		return creole(fc, title, text)
 	} else if head == '#' {
-		return markdown(fcfg, title, text)
+		return markdown(fc, title, text)
 	} else {
-		return nomark(fcfg, title, text)
+		return nomark(fc, title, text)
 	}
 }
 
-func Summarize(s string, n int) string {
-	if n < 2 {
+// TrimForSummary trims text to specified length with ellipsis.
+// Spaces are compressed.
+func TrimForSummary(text string, length int) string {
+	if length < 0 {
+		panic("program error")
+	}
+	if length < 1 {
+		return ""
+	}
+	if length < 2 {
 		return "."
 	}
 
-	var b strings.Builder
-	long := false
+	var buf strings.Builder
+	overflowed := false
 	space := false
 	i := 0
-	for _, r := range s {
-		if i >= n-2 {
-			long = true
+	for _, r := range text {
+		if i >= length-2 {
+			overflowed = true
 			break
 		}
 		if r == '\r' || r == '\n' || r == '\t' {
@@ -52,13 +61,13 @@ func Summarize(s string, n int) string {
 		} else {
 			space = false
 		}
-		b.WriteRune(r)
+		buf.WriteRune(r)
 		i++
 	}
 
-	if long {
-		return b.String() + ".."
+	if overflowed {
+		return buf.String() + ".."
 	} else {
-		return b.String()
+		return buf.String()
 	}
 }

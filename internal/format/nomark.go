@@ -203,7 +203,7 @@ func ensureBlock(s *state, block blockMode) {
 	openBlock(s, block)
 }
 
-func math(cfg formatConfig, s *state) bool {
+func math(fc formatConfig, s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "%%") {
 		return false
@@ -231,7 +231,7 @@ func math(cfg formatConfig, s *state) bool {
 	return true
 }
 
-func strong(cfg formatConfig, s *state) bool {
+func strong(fc formatConfig, s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "**") {
 		return false
@@ -266,7 +266,7 @@ func strong(cfg formatConfig, s *state) bool {
 	}
 	s.index += 2
 
-	markup(cfg, s)
+	markup(fc, s)
 
 	if s.innerDeco == decoStrong {
 		s.html.WriteString("</strong>")
@@ -287,7 +287,7 @@ func strong(cfg formatConfig, s *state) bool {
 	return true
 }
 
-func em(cfg formatConfig, s *state) bool {
+func em(fc formatConfig, s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "//") {
 		return false
@@ -322,7 +322,7 @@ func em(cfg formatConfig, s *state) bool {
 	}
 	s.index += 2
 
-	markup(cfg, s)
+	markup(fc, s)
 
 	if s.innerDeco == decoEm {
 		s.html.WriteString("</em>")
@@ -477,7 +477,7 @@ func nonURLIndex(line string) int {
 	return len(line)
 }
 
-func link(cfg formatConfig, s *state) bool {
+func link(fc formatConfig, s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "https:") {
 		return false
@@ -496,7 +496,7 @@ func link(cfg formatConfig, s *state) bool {
 		ext = ext[1:]
 	}
 	extFound := false
-	for _, extension := range cfg.image.extensions {
+	for _, extension := range fc.image.extensions {
 		if ext == extension {
 			extFound = true
 			break
@@ -504,7 +504,7 @@ func link(cfg formatConfig, s *state) bool {
 	}
 	domainFound := false
 	if extFound {
-		for _, domain := range cfg.image.domains {
+		for _, domain := range fc.image.domains {
 			if u.Host == domain {
 				domainFound = true
 				break
@@ -616,19 +616,19 @@ func parseHeading(s *state, line string) (int, string, bool) {
 	return level, title, true
 }
 
-func markup(cfg formatConfig, s *state) {
+func markup(fc formatConfig, s *state) {
 	for s.index < s.lineEnd {
-		if math(cfg, s) {
+		if math(fc, s) {
 			continue
-		} else if strong(cfg, s) {
+		} else if strong(fc, s) {
 			continue
-		} else if em(cfg, s) {
+		} else if em(fc, s) {
 			continue
 		} else if camel(s) {
 			continue
 		} else if wikiLink(s) {
 			continue
-		} else if link(cfg, s) {
+		} else if link(fc, s) {
 			continue
 		} else if html(s) {
 			continue
@@ -640,7 +640,7 @@ func markup(cfg formatConfig, s *state) {
 	}
 }
 
-func nomarkLine(cfg formatConfig, s *state) {
+func nomarkLine(fc formatConfig, s *state) {
 	line := s.input[s.index:s.lineEnd]
 
 	if s.block == blockCode {
@@ -696,6 +696,13 @@ func nomarkLine(cfg formatConfig, s *state) {
 		return
 	}
 
+	if line == "" {
+		ensureBlock(s, blockNone)
+		s.text.WriteString("\n")
+		nextLine(s)
+		return
+	}
+
 	prevBlock := s.block
 	ensureBlock(s, blockParagraph)
 	for s.index < s.lineEnd {
@@ -707,7 +714,7 @@ func nomarkLine(cfg formatConfig, s *state) {
 		s.html.WriteString("&nbsp;")
 		s.index += 1
 	}
-	markup(cfg, s)
+	markup(fc, s)
 	nextLine(s)
 
 	if s.index < len(s.input) {
@@ -723,7 +730,7 @@ func nomarkLine(cfg formatConfig, s *state) {
 	skipLastBlanks(s)
 }
 
-func nomark(cfg formatConfig, title string, text string) (string, string, string, string) {
+func nomark(fc formatConfig, title string, text string) (string, string, string, string) {
 	s := state{
 		input:     text,
 		index:     0,
@@ -768,7 +775,7 @@ func nomark(cfg formatConfig, title string, text string) (string, string, string
 		} else if s.block == blockCode && s.prevLine == "" && line == "}}}" {
 			closeBlock(&s, blockParagraph)
 			ensureBlock(&s, blockParagraph)
-			nomarkLine(cfg, &s)
+			nomarkLine(fc, &s)
 		} else if s.block != blockMath && s.block != blockRaw && s.block != blockCode && line == "%%%" {
 			ensureBlock(&s, blockMath)
 			nextLine(&s)
@@ -776,8 +783,13 @@ func nomark(cfg formatConfig, title string, text string) (string, string, string
 			closeBlock(&s, blockParagraph)
 			nextLine(&s)
 		} else if level, title, ok := parseHeading(&s, line); ok {
-			s.text.WriteString("\n" + line + "\n")
-			s.plain.WriteString("\n" + title + "\n")
+			s.text.WriteString("\n")
+			s.text.WriteString(line)
+			s.text.WriteString("\n")
+
+			s.plain.WriteString("\n")
+			s.plain.WriteString(title)
+			s.plain.WriteString("\n")
 			if level == 1 && s.title == "" {
 				s.title = title
 				nextLine(&s)
@@ -791,11 +803,21 @@ func nomark(cfg formatConfig, title string, text string) (string, string, string
 					buf.WriteRune('!')
 				}
 				mark := buf.String()
-				s.html.WriteString("<h" + levelStr + ">" + "<span class=\"markup\">" + mark + "</span> " + titleHTML + " <span class=\"markup\">" + mark + "</span>" + "</h" + levelStr + ">\n")
+				s.html.WriteString("<h")
+				s.html.WriteString(levelStr)
+				s.html.WriteString("><span class=\"markup\">")
+				s.html.WriteString(mark)
+				s.html.WriteString("</span> ")
+				s.html.WriteString(titleHTML)
+				s.html.WriteString(" <span class=\"markup\">")
+				s.html.WriteString(mark)
+				s.html.WriteString("</span></h")
+				s.html.WriteString(levelStr)
+				s.html.WriteString(">\n")
 				nextLine(&s)
 			}
 		} else {
-			nomarkLine(cfg, &s)
+			nomarkLine(fc, &s)
 		}
 	}
 	closeBlock(&s, blockNone)
