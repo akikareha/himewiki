@@ -1,46 +1,54 @@
 package format
 
-import "strings"
+import (
+	"unicode"
+	"unicode/utf8"
+)
 
-// TrimForSummary trims text to specified length with ellipsis.
-// Spaces are compressed.
-func TrimForSummary(text string, length int) string {
-	if length < 0 {
+// TrimForSummary trims text to specified rune length with ".." ellipsis.
+// It also compresses all whitespace (including tabs/newlines)
+// into single spaces.
+func TrimForSummary(text string, limit int) string {
+	if limit < 0 {
 		panic("program error")
 	}
-	if length < 1 {
+	if limit < 1 {
 		return ""
 	}
-	if length < 2 {
+
+	runeCount := utf8.RuneCountInString(text)
+
+	if limit < 2 {
+		if runeCount < 2 {
+			return text
+		}
 		return "."
 	}
 
-	var buf strings.Builder
-	overflowed := false
-	space := false
-	i := 0
+	var (
+		buf       = make([]rune, 0, limit)
+		prevSpace = false
+		count     = 0
+	)
+
 	for _, r := range text {
-		if i >= length-2 {
-			overflowed = true
-			break
-		}
-		if r == '\r' || r == '\n' || r == '\t' {
-			if space {
-				i++
+		if unicode.IsSpace(r) {
+			if prevSpace {
 				continue
 			}
 			r = ' '
-			space = true
+			prevSpace = true
 		} else {
-			space = false
+			prevSpace = false
 		}
-		buf.WriteRune(r)
-		i++
+
+		if count >= limit-2 && count+2 < runeCount {
+			return string(buf) + ".."
+		}
+
+		buf = append(buf, r)
+		count++
 	}
 
-	if overflowed {
-		return buf.String() + ".."
-	} else {
-		return buf.String()
-	}
+	return string(buf)
 }

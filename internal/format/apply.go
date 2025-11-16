@@ -13,7 +13,6 @@ func Apply(cfg *config.Config, title string, text string) (string, string, strin
 	}
 	head := text[0]
 
-
 	// Detect markup by very first character of input text.
 	// * '=' : Creole
 	// * '#' : Markdown
