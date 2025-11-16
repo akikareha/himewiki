@@ -588,34 +588,6 @@ func isBlank(line string) bool {
 	return true
 }
 
-var headingRe = regexp.MustCompile("^!!!(!*) (.+?) !!!(!*)$")
-
-const headingMaxLevel = 3
-
-func parseHeading(s *state, line string) (int, string, bool) {
-	if s.prevLine != "" {
-		return 0, "", false
-	}
-
-	matches := headingRe.FindStringSubmatch(line)
-	if matches == nil {
-		return 0, "", false
-	}
-
-	prefix := matches[1]
-	suffix := matches[3]
-	if len(prefix) != len(suffix) {
-		return 0, "", false
-	}
-	level := headingMaxLevel - len(prefix)
-	if level < 1 {
-		return 0, "", false
-	}
-
-	title := matches[2]
-	return level, title, true
-}
-
 func markup(fc formatConfig, s *state) {
 	for s.index < s.lineEnd {
 		if math(fc, s) {
@@ -725,6 +697,36 @@ func nomarkLine(fc formatConfig, s *state) {
 	}
 
 	skipLastBlanks(s)
+}
+
+var headingRe = regexp.MustCompile("^!!!(!*) (.+?) !!!(!*)$")
+const headingMaxLevel = 3
+
+func parseHeading(s *state, line string) (int, string, bool) {
+	if s.block == blockRaw || s.block == blockCode || s.block == blockMath {
+		return 0, "", false
+	}
+	if s.prevLine != "" {
+		return 0, "", false
+	}
+
+	matches := headingRe.FindStringSubmatch(line)
+	if matches == nil {
+		return 0, "", false
+	}
+
+	prefix := matches[1]
+	suffix := matches[3]
+	if len(prefix) != len(suffix) {
+		return 0, "", false
+	}
+	level := headingMaxLevel - len(prefix)
+	if level < 1 {
+		return 0, "", false
+	}
+
+	title := matches[2]
+	return level, title, true
 }
 
 func nomark(fc formatConfig, title string, text string) (string, string, string, string) {
