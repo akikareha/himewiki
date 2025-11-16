@@ -1,4 +1,4 @@
-package format
+package nomark
 
 import (
 	"github.com/akikareha/himewiki/internal/config"
@@ -13,7 +13,7 @@ type formatConfig struct {
 	image imageConfig
 }
 
-func toFormatConfig(cfg *config.Config) formatConfig {
+func ToFormatConfig(cfg *config.Config) formatConfig {
 	fc := formatConfig{}
 	fc.image.domains = cfg.Image.Domains
 	fc.image.extensions = cfg.Image.Extensions

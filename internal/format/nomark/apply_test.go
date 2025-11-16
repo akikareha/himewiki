@@ -1,4 +1,4 @@
-package format
+package nomark
 
 import "testing"
 
@@ -9,8 +9,8 @@ var mockCfg = formatConfig{
 	},
 }
 
-func TestNomark(t *testing.T) {
-	title, _, _, _ := nomark(mockCfg, "WikiPage", "Hello World")
+func TestApply(t *testing.T) {
+	title, _, _, _ := Apply(mockCfg, "WikiPage", "Hello World")
 
 	if title != "WikiPage" {
 		t.Errorf("title = %s; want %s", title, "WikiPage")

@@ -1,4 +1,4 @@
-package format
+package nomark
 
 import (
 	"html/template"
@@ -612,8 +612,133 @@ func markup(fc formatConfig, s *state) {
 	}
 }
 
+var headingRe = regexp.MustCompile("^!!!(!*) (.+?) !!!(!*)$")
+
+const headingMaxLevel = 3
+
+func parseHeading(s *state, line string) (int, string, bool) {
+	if s.block == blockRaw || s.block == blockCode || s.block == blockMath {
+		return 0, "", false
+	}
+	if s.prevLine != "" {
+		return 0, "", false
+	}
+
+	matches := headingRe.FindStringSubmatch(line)
+	if matches == nil {
+		return 0, "", false
+	}
+
+	prefix := matches[1]
+	suffix := matches[3]
+	if len(prefix) != len(suffix) {
+		return 0, "", false
+	}
+	level := headingMaxLevel - len(prefix)
+	if level < 1 {
+		return 0, "", false
+	}
+
+	title := matches[2]
+	return level, title, true
+}
+
 func nomarkLine(fc formatConfig, s *state) {
 	line := s.input[s.index:s.lineEnd]
+
+	// open raw block
+	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "" && strings.HasPrefix(line, " ") {
+		ensureBlock(s, blockRaw)
+		s.text.WriteString(line)
+		s.html.WriteString(template.HTMLEscapeString(line))
+		nextLine(s)
+		return
+	}
+
+	// open code block
+	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "{{{" && isBlank(line) {
+		ensureBlock(s, blockCode)
+		nextLine(s)
+		s.firstCode = true
+		return
+	}
+
+	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && isBlank(line) {
+		for s.index < len(s.input) {
+			closeBlock(s, blockParagraph)
+			nextLine(s)
+			if s.index >= len(s.input) {
+				break
+			}
+			line := s.input[s.index:s.lineEnd]
+			if !isBlank(line) {
+				break
+			}
+		}
+		return
+	}
+
+	// close code block
+	if s.block == blockCode && s.prevLine == "" && line == "}}}" {
+		closeBlock(s, blockParagraph)
+		ensureBlock(s, blockParagraph)
+		s.text.WriteString("}}}")
+		s.html.WriteString("<span class=\"markup\">}}}</span>")
+		nextLine(s)
+		return
+	}
+
+	// open math block
+	if s.block != blockMath && s.block != blockRaw && s.block != blockCode && line == "%%%" {
+		ensureBlock(s, blockMath)
+		nextLine(s)
+		return
+	}
+
+	// close math block
+	if s.block == blockMath && line == "%%%" {
+		closeBlock(s, blockParagraph)
+		nextLine(s)
+		return
+	}
+
+	// headings
+	if level, title, ok := parseHeading(s, line); ok {
+		s.text.WriteString("\n")
+		s.text.WriteString(line)
+		s.text.WriteString("\n")
+
+		s.plain.WriteString("\n")
+		s.plain.WriteString(title)
+		s.plain.WriteString("\n")
+		if level == 1 && s.title == "" {
+			s.title = title
+			nextLine(s)
+		} else {
+			closeBlock(s, blockNone)
+			titleHTML := template.HTMLEscapeString(title)
+			levelStr := strconv.Itoa(level)
+			var buf strings.Builder
+			buf.WriteString("!!!")
+			for i := 1; i <= headingMaxLevel-level; i++ {
+				buf.WriteRune('!')
+			}
+			mark := buf.String()
+			s.html.WriteString("<h")
+			s.html.WriteString(levelStr)
+			s.html.WriteString("><span class=\"markup\">")
+			s.html.WriteString(mark)
+			s.html.WriteString("</span> ")
+			s.html.WriteString(titleHTML)
+			s.html.WriteString(" <span class=\"markup\">")
+			s.html.WriteString(mark)
+			s.html.WriteString("</span></h")
+			s.html.WriteString(levelStr)
+			s.html.WriteString(">\n")
+			nextLine(s)
+		}
+		return
+	}
 
 	// in raw block
 	if s.block == blockRaw && strings.HasPrefix(line, " ") {
@@ -658,11 +783,6 @@ func nomarkLine(fc formatConfig, s *state) {
 		s.html.WriteString("<span class=\"markup\">{{{</span>")
 		nextLine(s)
 		return
-	} else if line == "}}}" {
-		s.text.WriteString("}}}")
-		s.html.WriteString("<span class=\"markup\">}}}</span>")
-		nextLine(s)
-		return
 	}
 
 	if line == "" {
@@ -699,37 +819,7 @@ func nomarkLine(fc formatConfig, s *state) {
 	skipLastBlanks(s)
 }
 
-var headingRe = regexp.MustCompile("^!!!(!*) (.+?) !!!(!*)$")
-const headingMaxLevel = 3
-
-func parseHeading(s *state, line string) (int, string, bool) {
-	if s.block == blockRaw || s.block == blockCode || s.block == blockMath {
-		return 0, "", false
-	}
-	if s.prevLine != "" {
-		return 0, "", false
-	}
-
-	matches := headingRe.FindStringSubmatch(line)
-	if matches == nil {
-		return 0, "", false
-	}
-
-	prefix := matches[1]
-	suffix := matches[3]
-	if len(prefix) != len(suffix) {
-		return 0, "", false
-	}
-	level := headingMaxLevel - len(prefix)
-	if level < 1 {
-		return 0, "", false
-	}
-
-	title := matches[2]
-	return level, title, true
-}
-
-func nomark(fc formatConfig, title string, text string) (string, string, string, string) {
+func Apply(fc formatConfig, title string, text string) (string, string, string, string) {
 	s := state{
 		input:     text,
 		index:     0,
@@ -752,98 +842,6 @@ func nomark(fc formatConfig, title string, text string) (string, string, string,
 	for s.index < len(s.input) {
 		s.prevLine = line
 		line = s.input[s.index:s.lineEnd]
-
-		// open raw block
-		if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "" && strings.HasPrefix(line, " ") {
-			ensureBlock(&s, blockRaw)
-			s.text.WriteString(line)
-			s.html.WriteString(template.HTMLEscapeString(line))
-			nextLine(&s)
-			continue
-		}
-
-		// open code block
-		if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "{{{" && isBlank(line) {
-			ensureBlock(&s, blockCode)
-			nextLine(&s)
-			s.firstCode = true
-			continue
-		}
-
-		if s.block != blockRaw && s.block != blockCode && s.block != blockMath && isBlank(line) {
-			for s.index < len(s.input) {
-				closeBlock(&s, blockParagraph)
-				nextLine(&s)
-				if s.index >= len(s.input) {
-					break
-				}
-				line := s.input[s.index:s.lineEnd]
-				if !isBlank(line) {
-					break
-				}
-			}
-			continue
-		}
-
-		// close code block
-		if s.block == blockCode && s.prevLine == "" && line == "}}}" {
-			closeBlock(&s, blockParagraph)
-			ensureBlock(&s, blockParagraph)
-			nomarkLine(fc, &s)
-			continue
-		}
-
-		// open math block
-		if s.block != blockMath && s.block != blockRaw && s.block != blockCode && line == "%%%" {
-			ensureBlock(&s, blockMath)
-			nextLine(&s)
-			continue
-		}
-
-		// close math block
-		if s.block == blockMath && line == "%%%" {
-			closeBlock(&s, blockParagraph)
-			nextLine(&s)
-			continue
-		}
-
-		// headings
-		if level, title, ok := parseHeading(&s, line); ok {
-			s.text.WriteString("\n")
-			s.text.WriteString(line)
-			s.text.WriteString("\n")
-
-			s.plain.WriteString("\n")
-			s.plain.WriteString(title)
-			s.plain.WriteString("\n")
-			if level == 1 && s.title == "" {
-				s.title = title
-				nextLine(&s)
-			} else {
-				closeBlock(&s, blockNone)
-				titleHTML := template.HTMLEscapeString(title)
-				levelStr := strconv.Itoa(level)
-				var buf strings.Builder
-				buf.WriteString("!!!")
-				for i := 1; i <= headingMaxLevel-level; i++ {
-					buf.WriteRune('!')
-				}
-				mark := buf.String()
-				s.html.WriteString("<h")
-				s.html.WriteString(levelStr)
-				s.html.WriteString("><span class=\"markup\">")
-				s.html.WriteString(mark)
-				s.html.WriteString("</span> ")
-				s.html.WriteString(titleHTML)
-				s.html.WriteString(" <span class=\"markup\">")
-				s.html.WriteString(mark)
-				s.html.WriteString("</span></h")
-				s.html.WriteString(levelStr)
-				s.html.WriteString(">\n")
-				nextLine(&s)
-			}
-			continue
-		}
 
 		nomarkLine(fc, &s)
 	}

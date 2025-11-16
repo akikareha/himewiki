@@ -1,33 +1,6 @@
 package format
 
-import (
-	"strings"
-
-	"github.com/akikareha/himewiki/internal/config"
-)
-
-// Apply applies wiki formatting on input text
-// and returns title, wiki text, plain text, HTML.
-func Apply(cfg *config.Config, title string, text string) (string, string, string, string) {
-	if len(text) < 1 {
-		return title, "", "", ""
-	}
-	head := text[0]
-
-	fc := toFormatConfig(cfg)
-
-	// Detect markup by very first character of input text.
-	// * '=' : Creole
-	// * '#' : Markdown
-	// * Others : Nomark
-	if head == '=' {
-		return creole(fc, title, text)
-	} else if head == '#' {
-		return markdown(fc, title, text)
-	} else {
-		return nomark(fc, title, text)
-	}
-}
+import "strings"
 
 // TrimForSummary trims text to specified length with ellipsis.
 // Spaces are compressed.
