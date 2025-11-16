@@ -643,6 +643,19 @@ func markup(fc formatConfig, s *state) {
 func nomarkLine(fc formatConfig, s *state) {
 	line := s.input[s.index:s.lineEnd]
 
+	// in raw block
+	if s.block == blockRaw && strings.HasPrefix(line, " ") {
+		s.text.WriteString("\n")
+		s.text.WriteString(line)
+
+		s.html.WriteString("\n")
+		s.html.WriteString(template.HTMLEscapeString(line))
+
+		nextLine(s)
+		return
+	}
+
+	// in code block
 	if s.block == blockCode {
 		if s.firstCode {
 			s.firstCode = false
@@ -654,7 +667,10 @@ func nomarkLine(fc formatConfig, s *state) {
 		s.html.WriteString(template.HTMLEscapeString(line))
 		nextLine(s)
 		return
-	} else if s.block == blockMath {
+	}
+
+	// in math block
+	if s.block == blockMath {
 		s.text.WriteString(line)
 		s.text.WriteString("\n")
 
@@ -663,25 +679,6 @@ func nomarkLine(fc formatConfig, s *state) {
 
 		nextLine(s)
 		return
-	}
-
-	if strings.HasPrefix(line, " ") {
-		if s.block == blockRaw {
-			s.text.WriteString("\n")
-			s.text.WriteString(line)
-
-			s.html.WriteString("\n")
-			s.html.WriteString(template.HTMLEscapeString(line))
-
-			nextLine(s)
-			return
-		} else if s.prevLine == "" {
-			ensureBlock(s, blockRaw)
-			s.text.WriteString(line)
-			s.html.WriteString(template.HTMLEscapeString(line))
-			nextLine(s)
-			return
-		}
 	}
 
 	if line == "{{{" {
@@ -753,14 +750,25 @@ func nomark(fc formatConfig, title string, text string) (string, string, string,
 	for s.index < len(s.input) {
 		s.prevLine = line
 		line = s.input[s.index:s.lineEnd]
-		if s.block != blockRaw && s.block != blockCode && s.block != blockMath && isBlank(line) {
-			if s.prevLine == "{{{" {
-				ensureBlock(&s, blockCode)
-				nextLine(&s)
-				s.firstCode = true
-				continue
-			}
 
+		// open raw block
+		if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "" && strings.HasPrefix(line, " ") {
+			ensureBlock(&s, blockRaw)
+			s.text.WriteString(line)
+			s.html.WriteString(template.HTMLEscapeString(line))
+			nextLine(&s)
+			continue
+		}
+
+		// open code block
+		if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "{{{" && isBlank(line) {
+			ensureBlock(&s, blockCode)
+			nextLine(&s)
+			s.firstCode = true
+			continue
+		}
+
+		if s.block != blockRaw && s.block != blockCode && s.block != blockMath && isBlank(line) {
 			for s.index < len(s.input) {
 				closeBlock(&s, blockParagraph)
 				nextLine(&s)
@@ -772,17 +780,33 @@ func nomark(fc formatConfig, title string, text string) (string, string, string,
 					break
 				}
 			}
-		} else if s.block == blockCode && s.prevLine == "" && line == "}}}" {
+			continue
+		}
+
+		// close code block
+		if s.block == blockCode && s.prevLine == "" && line == "}}}" {
 			closeBlock(&s, blockParagraph)
 			ensureBlock(&s, blockParagraph)
 			nomarkLine(fc, &s)
-		} else if s.block != blockMath && s.block != blockRaw && s.block != blockCode && line == "%%%" {
+			continue
+		}
+
+		// open math block
+		if s.block != blockMath && s.block != blockRaw && s.block != blockCode && line == "%%%" {
 			ensureBlock(&s, blockMath)
 			nextLine(&s)
-		} else if s.block == blockMath && line == "%%%" {
+			continue
+		}
+
+		// close math block
+		if s.block == blockMath && line == "%%%" {
 			closeBlock(&s, blockParagraph)
 			nextLine(&s)
-		} else if level, title, ok := parseHeading(&s, line); ok {
+			continue
+		}
+
+		// headings
+		if level, title, ok := parseHeading(&s, line); ok {
 			s.text.WriteString("\n")
 			s.text.WriteString(line)
 			s.text.WriteString("\n")
@@ -816,9 +840,10 @@ func nomark(fc formatConfig, title string, text string) (string, string, string,
 				s.html.WriteString(">\n")
 				nextLine(&s)
 			}
-		} else {
-			nomarkLine(fc, &s)
+			continue
 		}
+
+		nomarkLine(fc, &s)
 	}
 	closeBlock(&s, blockNone)
 
