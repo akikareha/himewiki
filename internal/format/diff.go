@@ -11,13 +11,9 @@ func Diff(text string) string {
 
 	// skip headers
 	lineNumber := 0
-	for index < len(text) {
+	for lineNumber < 2 && index < len(text) {
 		_, index = indexLineEnd(text, index)
-
-		lineNumber += 1
-		if lineNumber >= 3 {
-			break
-		}
+		lineNumber++
 	}
 
 	var html strings.Builder
