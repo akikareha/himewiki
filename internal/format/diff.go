@@ -5,6 +5,17 @@ import (
 	"strings"
 )
 
+func escapeIndentHTML(line string) string {
+	var buf strings.Builder
+	i := 0
+	for i < len(line) && line[i] == ' ' {
+		buf.WriteString("&nbsp;")
+		i++
+	}
+	buf.WriteString(template.HTMLEscapeString(line[i:]))
+	return buf.String()
+}
+
 // Diff formats diff text to HTML.
 func Diff(text string) string {
 	index := 0
@@ -28,27 +39,25 @@ func Diff(text string) string {
 		}
 
 		c := line[0]
-		htmlLine := template.HTMLEscapeString(string(line))
 		if c == '+' {
 			html.WriteString("<span class=\"plus\">+</span>")
 			html.WriteString("<span class=\"plus-line\">")
-			html.WriteString(htmlLine[1:])
+			html.WriteString(escapeIndentHTML(line[1:]))
 			html.WriteString("</span><br />\n")
 		} else if c == '-' {
 			html.WriteString("<span class=\"minus\">-</span>")
 			html.WriteString("<span class=\"minus-line\">")
-			html.WriteString(htmlLine[1:])
+			html.WriteString(escapeIndentHTML(line[1:]))
 			html.WriteString("</span><br />\n")
 		} else if c == '@' {
-			html.WriteString("<span class=\"hunk\">@")
-			html.WriteString(htmlLine[1:])
+			html.WriteString("<span class=\"hunk\">")
+			html.WriteString(template.HTMLEscapeString(line))
 			html.WriteString("</span><br />\n")
 		} else if c == ' ' {
-			html.WriteString("&nbsp;")
-			html.WriteString(htmlLine[1:])
+			html.WriteString(escapeIndentHTML(line))
 			html.WriteString("<br />\n")
 		} else {
-			html.WriteString(htmlLine)
+			html.WriteString(template.HTMLEscapeString(line))
 			html.WriteString("<br />\n")
 		}
 	}

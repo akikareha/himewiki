@@ -13,6 +13,9 @@ func TestDiff(t *testing.T) {
 		{"minus", "--- old\r\n+++ new\r\n-test\r\n", "<span class=\"minus\">-</span><span class=\"minus-line\">test</span><br />\n"},
 		{"hunk", "--- old\r\n+++ new\r\n@@ -0,0 +0,0 @@\r\n", "<span class=\"hunk\">@@ -0,0 +0,0 @@</span><br />\n"},
 		{"text", "--- old\r\n+++ new\r\n test\r\n", "&nbsp;test<br />\n"},
+		{"plus indent", "--- old\r\n+++ new\r\n+  test\r\n", "<span class=\"plus\">+</span><span class=\"plus-line\">&nbsp;&nbsp;test</span><br />\n"},
+		{"minus indent", "--- old\r\n+++ new\r\n-  test\r\n", "<span class=\"minus\">-</span><span class=\"minus-line\">&nbsp;&nbsp;test</span><br />\n"},
+		{"text indent", "--- old\r\n+++ new\r\n   test\r\n", "&nbsp;&nbsp;&nbsp;test<br />\n"},
 	}
 
 	for _, tt := range tests {
