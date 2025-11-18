@@ -10,9 +10,24 @@ var mockCfg = formatConfig{
 }
 
 func TestApply(t *testing.T) {
-	title, _, _, _ := Apply(mockCfg, "WikiPage", "Hello World")
+	tests := []struct {
+		name  string
+		title string
+		text  string
+		wantTitle  string
+		wantText  string
+		wantPlain  string
+		wantHTML  string
+	}{
+		{"simple", "WikiPage", "This is a test.", "WikiPage", "\nThis is a test.", "\nThis is a test.", "<p>\nThis is a test.\n</p>"},
+	}
 
-	if title != "WikiPage" {
-		t.Errorf("title = %s; want %s", title, "WikiPage")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotTitle, gotText, gotPlain, gotHTML := Apply(mockCfg, tt.title, tt.text)
+			if gotTitle != tt.wantTitle || gotText != tt.wantText || gotPlain != tt.wantPlain || gotHTML != tt.wantHTML {
+				t.Errorf("Apply(\"%s\", \"%s\") = %s, %s, %s, %s; want %s, %s, %s, %s", tt.title, tt.text, gotTitle, gotText, gotPlain, gotHTML, tt.wantTitle, tt.wantText, tt.wantPlain, tt.wantHTML)
+			}
+		})
 	}
 }
