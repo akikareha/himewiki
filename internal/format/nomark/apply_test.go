@@ -11,15 +11,59 @@ var mockCfg = formatConfig{
 
 func TestApply(t *testing.T) {
 	tests := []struct {
-		name  string
-		title string
-		text  string
-		wantTitle  string
+		name      string
+		title     string
+		text      string
+		wantTitle string
 		wantText  string
-		wantPlain  string
+		wantPlain string
 		wantHTML  string
 	}{
-		{"simple", "WikiPage", "This is a test.", "WikiPage", "\nThis is a test.", "\nThis is a test.", "<p>\nThis is a test.\n</p>"},
+		{
+			"blank",
+			"WikiPage",
+			"",
+			"WikiPage",
+			"",
+			"",
+			"",
+		},
+		{
+			"blank line",
+			"WikiPage",
+			"\n",
+			"WikiPage",
+			"",
+			"",
+			"",
+		},
+		{
+			"simple",
+			"WikiPage",
+			"This is a test.",
+			"WikiPage",
+			"This is a test.\n",
+			"This is a test.\n",
+			"<p>\nThis is a test.\n</p>\n",
+		},
+		{
+			"simple line",
+			"WikiPage",
+			"This is a test.\n",
+			"WikiPage",
+			"This is a test.\n",
+			"This is a test.\n",
+			"<p>\nThis is a test.\n</p>\n",
+		},
+		{
+			"multi line",
+			"WikiPage",
+			"This is a test.\nI love tests.\n",
+			"WikiPage",
+			"This is a test.\nI love tests.\n",
+			"This is a test.\nI love tests.\n",
+			"<p>\nThis is a test.<br />\nI love tests.\n</p>\n",
+		},
 	}
 
 	for _, tt := range tests {

@@ -4,9 +4,9 @@ import "testing"
 
 func TestDiff(t *testing.T) {
 	tests := []struct {
-		name  string
-		text  string
-		want  string
+		name string
+		text string
+		want string
 	}{
 		{"zero", "--- old\r\n+++ new\r\n", ""},
 		{"plus", "--- old\r\n+++ new\r\n+test\r\n", "<span class=\"plus\">+</span><span class=\"plus-line\">test</span><br />\n"},
