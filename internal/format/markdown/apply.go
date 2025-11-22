@@ -41,7 +41,6 @@ type state struct {
 	prevLine  string
 	line      string
 	title     string
-	firstCode bool
 	outerDeco decoMode
 	innerDeco decoMode
 }
@@ -692,10 +691,11 @@ func handleBlock(s *state) bool {
 
 	// open code block
 	if s.block != blockRaw && s.block != blockCode &&
-		s.block != blockMath && s.prevLine == "{{{" && isBlank(s.line) {
+		s.block != blockMath && s.line == "```" {
+		s.text.WriteString("```\n")
+		s.plain.WriteString("\n")
 		ensureBlock(s, blockCode)
 		nextLine(s)
-		s.firstCode = true
 		return true
 	}
 
@@ -717,11 +717,10 @@ func handleBlock(s *state) bool {
 	}
 
 	// close code block
-	if s.block == blockCode && s.prevLine == "" && s.line == "}}}" {
+	if s.block == blockCode && s.line == "```" {
 		ensureBlock(s, blockNone)
-		s.text.WriteString("}}}\n\n")
+		s.text.WriteString("```\n")
 		s.plain.WriteString("\n")
-		s.html.WriteString("<span class=\"markup\">}}}</span>\n")
 		nextLine(s)
 		return true
 	}
@@ -795,12 +794,6 @@ func handleBlock(s *state) bool {
 
 	// in code block
 	if s.block == blockCode {
-		if s.firstCode {
-			s.text.WriteString("\n")
-			s.html.WriteString("\n")
-			s.firstCode = false
-		}
-
 		s.text.WriteString(s.line)
 		s.text.WriteString("\n")
 
@@ -822,13 +815,6 @@ func handleBlock(s *state) bool {
 		s.html.WriteString(template.HTMLEscapeString(s.line))
 		s.html.WriteString("\n")
 
-		nextLine(s)
-		return true
-	}
-
-	if s.line == "{{{" {
-		s.text.WriteString("{{{\n")
-		s.html.WriteString("<span class=\"markup\">{{{</span>\n")
 		nextLine(s)
 		return true
 	}
@@ -877,7 +863,6 @@ func Apply(fc formatConfig, title string, text string) (
 		prevLine:  "",
 		line:      "",
 		title:     "",
-		firstCode: false,
 		outerDeco: decoNone,
 		innerDeco: decoNone,
 	}

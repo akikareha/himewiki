@@ -634,9 +634,8 @@ func handleBlock(s *state) bool {
 
 	// close code block
 	if s.block == blockCode && s.prevLine == "" && s.line == "}}}" {
-		ensureBlock(s, blockNone)
+		ensureBlock(s, blockParagraph)
 		s.text.WriteString("}}}\n\n")
-		s.plain.WriteString("\n")
 		s.html.WriteString("<span class=\"markup\">}}}</span>\n")
 		nextLine(s)
 		return true
@@ -723,8 +722,7 @@ func handleBlock(s *state) bool {
 	if s.block == blockCode {
 		if s.firstCode {
 			s.text.WriteString("\n")
-			s.html.WriteString("\n")
-			s.firstCode = false
+			s.plain.WriteString("\n")
 		}
 
 		s.text.WriteString(s.line)
@@ -733,8 +731,12 @@ func handleBlock(s *state) bool {
 		s.plain.WriteString(s.line)
 		s.plain.WriteString("\n")
 
+		if s.firstCode {
+			s.firstCode = false
+		} else {
+			s.html.WriteString("\n")
+		}
 		s.html.WriteString(template.HTMLEscapeString(s.line))
-		s.html.WriteString("\n")
 
 		nextLine(s)
 		return true
@@ -753,6 +755,7 @@ func handleBlock(s *state) bool {
 	}
 
 	if s.line == "{{{" {
+		ensureBlock(s, blockParagraph)
 		s.text.WriteString("{{{\n")
 		s.html.WriteString("<span class=\"markup\">{{{</span>\n")
 		nextLine(s)

@@ -118,6 +118,15 @@ func TestApply(t *testing.T) {
 			"This is a test.\n",
 			"<p>\nThis <span class=\"markup\">//</span><em>is</em><span class=\"markup\">//</span> a test.\n</p>\n",
 		},
+		{
+			"code",
+			"WikiPage",
+			"{{{\n\nbegin\n  print\nend\n\n}}}\n\n",
+			"WikiPage",
+			"{{{\n\nbegin\n  print\nend\n\n}}}\n\n",
+			"\nbegin\n  print\nend\n\n",
+			"<p>\n<span class=\"markup\">{{{</span>\n</p>\n<pre><code>begin\n  print\nend\n</code></pre>\n<p>\n<span class=\"markup\">}}}</span>\n</p>\n",
+		},
 	}
 
 	for _, tt := range tests {
