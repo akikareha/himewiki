@@ -29,6 +29,7 @@ const (
 )
 
 type state struct {
+	config    formatConfig
 	input     string
 	index     int
 	text      *strings.Builder
@@ -37,12 +38,28 @@ type state struct {
 	block     blockMode
 	nextLine  int
 	lineEnd   int
+	prevLine  string
 	line      string
+	title     string
+	firstCode bool
 	outerDeco decoMode
 	innerDeco decoMode
-	prevLine  string
-	firstCode bool
-	title     string
+}
+
+func closeDecos(s *state) {
+	if s.innerDeco == decoStrong {
+		s.html.WriteString("</strong>")
+	} else if s.innerDeco == decoEm {
+		s.html.WriteString("</em>")
+	}
+	s.innerDeco = decoNone
+
+	if s.outerDeco == decoStrong {
+		s.html.WriteString("</strong>")
+	} else if s.outerDeco == decoEm {
+		s.html.WriteString("</em>")
+	}
+	s.outerDeco = decoNone
 }
 
 func skipBlankLines(s *state) {
@@ -72,6 +89,7 @@ func skipBlankLines(s *state) {
 
 func closeBlock(s *state, nextBlock blockMode) {
 	if s.block == blockParagraph {
+		closeDecos(s)
 		s.html.WriteString("</p>\n")
 		if nextBlock != blockRaw && nextBlock != blockCode {
 			skipBlankLines(s)
@@ -127,7 +145,7 @@ func ensureBlock(s *state, block blockMode) {
 	openBlock(s, block)
 }
 
-func math(fc formatConfig, s *state) bool {
+func math(s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "%%") {
 		return false
@@ -155,7 +173,7 @@ func math(fc formatConfig, s *state) bool {
 	return true
 }
 
-func strong(fc formatConfig, s *state) bool {
+func strong(s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "**") {
 		return false
@@ -189,29 +207,10 @@ func strong(fc formatConfig, s *state) bool {
 		s.innerDeco = decoStrong
 	}
 	s.index += 2
-
-	applyLine(fc, s)
-
-	if s.innerDeco == decoStrong {
-		s.html.WriteString("</strong>")
-		s.innerDeco = decoNone
-		return true
-	}
-
-	if s.outerDeco == decoStrong {
-		if s.innerDeco == decoEm {
-			s.html.WriteString("</em>")
-			s.innerDeco = decoNone
-		}
-		s.html.WriteString("</strong>")
-		s.outerDeco = decoNone
-		return true
-	}
-
 	return true
 }
 
-func em(fc formatConfig, s *state) bool {
+func em(s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "//") {
 		return false
@@ -245,25 +244,6 @@ func em(fc formatConfig, s *state) bool {
 		s.innerDeco = decoEm
 	}
 	s.index += 2
-
-	applyLine(fc, s)
-
-	if s.innerDeco == decoEm {
-		s.html.WriteString("</em>")
-		s.innerDeco = decoNone
-		return true
-	}
-
-	if s.outerDeco == decoEm {
-		if s.innerDeco == decoStrong {
-			s.html.WriteString("</strong>")
-			s.innerDeco = decoNone
-		}
-		s.html.WriteString("</em>")
-		s.outerDeco = decoNone
-		return true
-	}
-
 	return true
 }
 
@@ -401,7 +381,7 @@ func nonURLIndex(line string) int {
 	return len(line)
 }
 
-func link(fc formatConfig, s *state) bool {
+func link(s *state) bool {
 	line := s.input[s.index:s.lineEnd]
 	if !strings.HasPrefix(line, "https:") {
 		return false
@@ -420,7 +400,7 @@ func link(fc formatConfig, s *state) bool {
 		ext = ext[1:]
 	}
 	extFound := false
-	for _, extension := range fc.image.extensions {
+	for _, extension := range s.config.image.extensions {
 		if ext == extension {
 			extFound = true
 			break
@@ -428,7 +408,7 @@ func link(fc formatConfig, s *state) bool {
 	}
 	domainFound := false
 	if extFound {
-		for _, domain := range fc.image.domains {
+		for _, domain := range s.config.image.domains {
 			if u.Host == domain {
 				domainFound = true
 				break
@@ -512,19 +492,19 @@ func isBlank(line string) bool {
 	return true
 }
 
-func applyLine(fc formatConfig, s *state) {
+func handleLine(s *state) {
 	for s.index < s.lineEnd {
-		if math(fc, s) {
+		if math(s) {
 			continue
-		} else if strong(fc, s) {
+		} else if strong(s) {
 			continue
-		} else if em(fc, s) {
+		} else if em(s) {
 			continue
 		} else if camel(s) {
 			continue
 		} else if wikiLink(s) {
 			continue
-		} else if link(fc, s) {
+		} else if link(s) {
 			continue
 		} else if html(s) {
 			continue
@@ -580,21 +560,26 @@ func nextLine(s *state) {
 const headingMaxLevel = 3
 
 func parseHeading(s *state) (int, string, bool) {
-	if s.block == blockRaw || s.block == blockCode || s.block == blockMath {
+	if s.block == blockRaw ||
+		s.block == blockCode ||
+		s.block == blockMath {
 		return 0, "", false
 	}
 	if s.prevLine != "" {
 		return 0, "", false
 	}
 
-	if strings.HasPrefix(s.line, "!!!!! ") && strings.HasSuffix(s.line, " !!!!!") {
-		return 1, s.line[6:len(s.line) - 6], true
+	if strings.HasPrefix(s.line, "!!!!! ") &&
+		strings.HasSuffix(s.line, " !!!!!") {
+		return 1, s.line[6 : len(s.line)-6], true
 	}
-	if strings.HasPrefix(s.line, "!!!! ") && strings.HasSuffix(s.line, " !!!!") {
-		return 2, s.line[5:len(s.line) - 5], true
+	if strings.HasPrefix(s.line, "!!!! ") &&
+		strings.HasSuffix(s.line, " !!!!") {
+		return 2, s.line[5 : len(s.line)-5], true
 	}
-	if strings.HasPrefix(s.line, "!!! ") && strings.HasSuffix(s.line, " !!!") {
-		return 3, s.line[4:len(s.line) - 4], true
+	if strings.HasPrefix(s.line, "!!! ") &&
+		strings.HasSuffix(s.line, " !!!") {
+		return 3, s.line[4 : len(s.line)-4], true
 	}
 
 	return 0, "", false
@@ -604,9 +589,11 @@ func hasNextLine(s *state) bool {
 	return s.nextLine < len(s.input)
 }
 
-func applyBlock(fc formatConfig, s *state) bool {
+func handleBlock(s *state) bool {
 	// open raw block
-	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "" && strings.HasPrefix(s.line, " ") {
+	if s.block != blockRaw && s.block != blockCode &&
+		s.block != blockMath && s.prevLine == "" &&
+		strings.HasPrefix(s.line, " ") {
 		ensureBlock(s, blockRaw)
 
 		s.text.WriteString(s.line)
@@ -623,7 +610,8 @@ func applyBlock(fc formatConfig, s *state) bool {
 	}
 
 	// open code block
-	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "{{{" && isBlank(s.line) {
+	if s.block != blockRaw && s.block != blockCode &&
+		s.block != blockMath && s.prevLine == "{{{" && isBlank(s.line) {
 		ensureBlock(s, blockCode)
 		nextLine(s)
 		s.firstCode = true
@@ -631,7 +619,8 @@ func applyBlock(fc formatConfig, s *state) bool {
 	}
 
 	// close paragraph block
-	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && isBlank(s.line) {
+	if s.block != blockRaw && s.block != blockCode &&
+		s.block != blockMath && isBlank(s.line) {
 		for s.index < len(s.input) {
 			ensureBlock(s, blockNone)
 			nextLine(s)
@@ -657,7 +646,8 @@ func applyBlock(fc formatConfig, s *state) bool {
 	}
 
 	// open math block
-	if s.block != blockMath && s.block != blockRaw && s.block != blockCode && s.line == "%%%" {
+	if s.block != blockMath && s.block != blockRaw &&
+		s.block != blockCode && s.line == "%%%" {
 		ensureBlock(s, blockMath)
 		nextLine(s)
 		return true
@@ -783,7 +773,8 @@ func applyBlock(fc formatConfig, s *state) bool {
 	return false
 }
 
-func skipLastBlanks(s *state) {
+func trimTrailingBlanks(s *state) {
+	// find succeeding blanks
 	i := s.index
 	for i < len(s.input) {
 		c := s.input[i]
@@ -792,13 +783,18 @@ func skipLastBlanks(s *state) {
 		}
 		i += 1
 	}
+	// trim blanks if end of text was reached
 	if i >= len(s.input) {
 		s.index = i
 	}
 }
 
-func Apply(fc formatConfig, title string, text string) (string, string, string, string) {
+// Apply applies Nomark formatting on specified title and text.
+func Apply(fc formatConfig, title string, text string) (
+	string, string, string, string,
+) {
 	s := state{
+		config:    fc,
 		input:     text,
 		index:     0,
 		text:      new(strings.Builder),
@@ -807,41 +803,71 @@ func Apply(fc formatConfig, title string, text string) (string, string, string, 
 		block:     blockNone,
 		nextLine:  0,
 		lineEnd:   0,
+		prevLine:  "",
 		line:      "",
+		title:     "",
+		firstCode: false,
 		outerDeco: decoNone,
 		innerDeco: decoNone,
-		prevLine:  "",
-		firstCode: false,
-		title:     "",
 	}
 
+	// ignore beginning blank lines
 	skipBlankLines(&s)
+
+	// find first line
 	nextLine(&s)
+
+	// main for-each line loop
 	for s.index < len(s.input) {
+		// backup previous line
 		s.prevLine = s.line
+		// load current line
 		s.line = s.input[s.index:s.lineEnd]
 
-		if applyBlock(fc, &s) {
+		// handle block structures
+		if handleBlock(&s) {
 			continue
 		}
 
+		// ensure normal paragraph is open
 		ensureBlock(&s, blockParagraph)
+		// convert starting spaces to non-breaking spaces
+		// TODO handle tabs
 		for s.index < s.lineEnd {
 			c := s.input[s.index]
 			if c != ' ' {
 				break
 			}
 			s.text.WriteString(" ")
+			s.plain.WriteString(" ")
 			s.html.WriteString("&nbsp;")
 			s.index += 1
 		}
-		applyLine(fc, &s)
+		// handle normal markups in line
+		// note that nextLine might be called in handleLine
+		handleLine(&s)
 
+		// add LF to text and plain text buffers
 		s.text.WriteString("\n")
 		s.plain.WriteString("\n")
 
+		// find next line
 		nextLine(&s)
 
+		// here after, range check is required
+		// since s.index might be advanced
+
+		// add blank lines to text and plain text buffers
+		if s.index < len(s.input) {
+			line := s.input[s.index:s.lineEnd]
+			if isBlank(line) {
+				s.text.WriteString("\n")
+				s.plain.WriteString("\n")
+			}
+		}
+
+		// add <br /> to HTML buffer
+		// last line in paragraph has no <br />
 		if s.block == blockParagraph {
 			if s.index < len(s.input) {
 				line := s.input[s.index:s.lineEnd]
@@ -855,20 +881,19 @@ func Apply(fc formatConfig, title string, text string) (string, string, string, 
 			}
 		}
 
-		if s.index < len(s.input) {
-			line := s.input[s.index:s.lineEnd]
-			if isBlank(line) {
-				s.text.WriteString("\n")
-				s.plain.WriteString("\n")
-			}
-		}
-
-		skipLastBlanks(&s)
+		// trim trailing blank lines if exist
+		trimTrailingBlanks(&s)
 	}
+
+	// main loop finished
+	// ensure no blocks are open
 	ensureBlock(&s, blockNone)
 
+	// if no title is found from input text, use original title
 	if s.title == "" {
 		s.title = title
 	}
+
+	// return result
 	return s.title, s.text.String(), s.plain.String(), s.html.String()
 }

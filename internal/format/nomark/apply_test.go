@@ -100,6 +100,24 @@ func TestApply(t *testing.T) {
 			"Test\n",
 			"<h3><span class=\"markup\">!!!</span> Test <span class=\"markup\">!!!</span></h3>\n",
 		},
+		{
+			"strong",
+			"WikiPage",
+			"This **is** a test.",
+			"WikiPage",
+			"This **is** a test.\n",
+			"This is a test.\n",
+			"<p>\nThis <span class=\"markup\">**</span><strong>is</strong><span class=\"markup\">**</span> a test.\n</p>\n",
+		},
+		{
+			"em",
+			"WikiPage",
+			"This //is// a test.",
+			"WikiPage",
+			"This //is// a test.\n",
+			"This is a test.\n",
+			"<p>\nThis <span class=\"markup\">//</span><em>is</em><span class=\"markup\">//</span> a test.\n</p>\n",
+		},
 	}
 
 	for _, tt := range tests {
