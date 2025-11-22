@@ -1,4 +1,4 @@
-package nomark
+package markdown
 
 import (
 	"html/template"
@@ -181,7 +181,7 @@ func strong(s *state) bool {
 
 	if s.innerDeco == decoStrong {
 		s.text.WriteString("**")
-		s.html.WriteString("</strong><span class=\"markup\">**</span>")
+		s.html.WriteString("</strong>")
 		s.innerDeco = decoNone
 		s.index += 2
 		return true
@@ -193,14 +193,51 @@ func strong(s *state) bool {
 			s.innerDeco = decoNone
 		}
 		s.text.WriteString("**")
-		s.html.WriteString("</strong><span class=\"markup\">**</span>")
+		s.html.WriteString("</strong>")
 		s.outerDeco = decoNone
 		s.index += 2
 		return true
 	}
 
 	s.text.WriteString("**")
-	s.html.WriteString("<span class=\"markup\">**</span><strong>")
+	s.html.WriteString("<strong>")
+	if s.outerDeco == decoNone {
+		s.outerDeco = decoStrong
+	} else {
+		s.innerDeco = decoStrong
+	}
+	s.index += 2
+	return true
+}
+
+func altStrong(s *state) bool {
+	line := s.input[s.index:s.lineEnd]
+	if !strings.HasPrefix(line, "__") {
+		return false
+	}
+
+	if s.innerDeco == decoStrong {
+		s.text.WriteString("__")
+		s.html.WriteString("</strong>")
+		s.innerDeco = decoNone
+		s.index += 2
+		return true
+	}
+
+	if s.outerDeco == decoStrong {
+		if s.innerDeco == decoEm {
+			s.html.WriteString("</em>")
+			s.innerDeco = decoNone
+		}
+		s.text.WriteString("__")
+		s.html.WriteString("</strong>")
+		s.outerDeco = decoNone
+		s.index += 2
+		return true
+	}
+
+	s.text.WriteString("__")
+	s.html.WriteString("<strong>")
 	if s.outerDeco == decoNone {
 		s.outerDeco = decoStrong
 	} else {
@@ -212,15 +249,15 @@ func strong(s *state) bool {
 
 func em(s *state) bool {
 	line := s.input[s.index:s.lineEnd]
-	if !strings.HasPrefix(line, "//") {
+	if !strings.HasPrefix(line, "*") {
 		return false
 	}
 
 	if s.innerDeco == decoEm {
-		s.text.WriteString("//")
-		s.html.WriteString("</em><span class=\"markup\">//</span>")
+		s.text.WriteString("*")
+		s.html.WriteString("</em>")
 		s.innerDeco = decoNone
-		s.index += 2
+		s.index += 1
 		return true
 	}
 
@@ -229,21 +266,58 @@ func em(s *state) bool {
 			s.html.WriteString("</strong>")
 			s.innerDeco = decoNone
 		}
-		s.text.WriteString("//")
-		s.html.WriteString("</em><span class=\"markup\">//</span>")
+		s.text.WriteString("*")
+		s.html.WriteString("</em>")
 		s.outerDeco = decoNone
-		s.index += 2
+		s.index += 1
 		return true
 	}
 
-	s.text.WriteString("//")
-	s.html.WriteString("<span class=\"markup\">//</span><em>")
+	s.text.WriteString("*")
+	s.html.WriteString("<em>")
 	if s.outerDeco == decoNone {
 		s.outerDeco = decoEm
 	} else {
 		s.innerDeco = decoEm
 	}
-	s.index += 2
+	s.index += 1
+	return true
+}
+
+func altEm(s *state) bool {
+	line := s.input[s.index:s.lineEnd]
+	if !strings.HasPrefix(line, "_") {
+		return false
+	}
+
+	if s.innerDeco == decoEm {
+		s.text.WriteString("_")
+		s.html.WriteString("</em>")
+		s.innerDeco = decoNone
+		s.index += 1
+		return true
+	}
+
+	if s.outerDeco == decoEm {
+		if s.innerDeco == decoStrong {
+			s.html.WriteString("</strong>")
+			s.innerDeco = decoNone
+		}
+		s.text.WriteString("_")
+		s.html.WriteString("</em>")
+		s.outerDeco = decoNone
+		s.index += 1
+		return true
+	}
+
+	s.text.WriteString("_")
+	s.html.WriteString("<em>")
+	if s.outerDeco == decoNone {
+		s.outerDeco = decoEm
+	} else {
+		s.innerDeco = decoEm
+	}
+	s.index += 1
 	return true
 }
 
@@ -485,7 +559,11 @@ func handleLine(s *state) {
 			continue
 		} else if strong(s) {
 			continue
+		} else if altStrong(s) {
+			continue
 		} else if em(s) {
+			continue
+		} else if altEm(s) {
 			continue
 		} else if camel(s) {
 			continue
@@ -554,7 +632,7 @@ func nextLine(s *state) {
 	s.lineEnd = nonBlank
 }
 
-const headingMaxLevel = 3
+const headingMaxLevel = 6
 
 func parseHeading(s *state) (int, string, bool) {
 	if s.block == blockRaw ||
@@ -566,17 +644,23 @@ func parseHeading(s *state) (int, string, bool) {
 		return 0, "", false
 	}
 
-	if strings.HasPrefix(s.line, "!!!!! ") &&
-		strings.HasSuffix(s.line, " !!!!!") {
-		return 1, s.line[6 : len(s.line)-6], true
+	if strings.HasPrefix(s.line, "# ") {
+		return 1, s.line[2:], true
 	}
-	if strings.HasPrefix(s.line, "!!!! ") &&
-		strings.HasSuffix(s.line, " !!!!") {
-		return 2, s.line[5 : len(s.line)-5], true
+	if strings.HasPrefix(s.line, "## ") {
+		return 2, s.line[3:], true
 	}
-	if strings.HasPrefix(s.line, "!!! ") &&
-		strings.HasSuffix(s.line, " !!!") {
-		return 3, s.line[4 : len(s.line)-4], true
+	if strings.HasPrefix(s.line, "### ") {
+		return 3, s.line[4:], true
+	}
+	if strings.HasPrefix(s.line, "#### ") {
+		return 4, s.line[5:], true
+	}
+	if strings.HasPrefix(s.line, "##### ") {
+		return 5, s.line[6:], true
+	}
+	if strings.HasPrefix(s.line, "###### ") {
+		return 6, s.line[7:], true
 	}
 
 	return 0, "", false
@@ -682,21 +766,11 @@ func handleBlock(s *state) bool {
 			ensureBlock(s, blockNone)
 			titleHTML := template.HTMLEscapeString(title)
 			levelStr := strconv.Itoa(level)
-			var buf strings.Builder
-			buf.WriteString("!!!")
-			for i := 1; i <= headingMaxLevel-level; i++ {
-				buf.WriteRune('!')
-			}
-			mark := buf.String()
 			s.html.WriteString("<h")
 			s.html.WriteString(levelStr)
-			s.html.WriteString("><span class=\"markup\">")
-			s.html.WriteString(mark)
-			s.html.WriteString("</span> ")
+			s.html.WriteString(">")
 			s.html.WriteString(titleHTML)
-			s.html.WriteString(" <span class=\"markup\">")
-			s.html.WriteString(mark)
-			s.html.WriteString("</span></h")
+			s.html.WriteString("</h")
 			s.html.WriteString(levelStr)
 			s.html.WriteString(">\n")
 			nextLine(s)
@@ -863,19 +937,9 @@ func Apply(fc formatConfig, title string, text string) (
 			}
 		}
 
-		// add <br /> to HTML buffer
-		// last line in paragraph has no <br />
+		// add LF to HTML buffer
 		if s.block == blockParagraph {
-			if s.index < len(s.input) {
-				line := s.input[s.index:s.lineEnd]
-				if isBlank(line) {
-					s.html.WriteString("\n")
-				} else {
-					s.html.WriteString("<br />\n")
-				}
-			} else {
-				s.html.WriteString("\n")
-			}
+			s.html.WriteString("\n")
 		}
 
 		// trim trailing blank lines if exist

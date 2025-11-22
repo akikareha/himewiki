@@ -35,7 +35,8 @@ type Config struct {
 	} `yaml:"site"`
 
 	Wiki struct {
-		Front string `yaml:"front"`
+		Front  string `yaml:"front"`
+		Format string `yaml:"format"`
 	} `yaml:"wiki"`
 
 	Image struct {

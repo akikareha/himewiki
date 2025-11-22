@@ -8,7 +8,8 @@ type Public struct {
 	}
 
 	Wiki struct {
-		Front string
+		Front  string
+		Format string
 	}
 
 	Image struct {
@@ -54,9 +55,11 @@ func Publish(cfg *Config) Public {
 		},
 
 		Wiki: struct {
-			Front string
+			Front  string
+			Format string
 		}{
-			Front: cfg.Wiki.Front,
+			Front:  cfg.Wiki.Front,
+			Format: cfg.Wiki.Format,
 		},
 
 		Image: struct {
