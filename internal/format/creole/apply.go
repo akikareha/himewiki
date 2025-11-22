@@ -105,7 +105,6 @@ func closeBlock(s *state, nextBlock blockMode) {
 		s.plain.WriteString("\n")
 
 		s.html.WriteString("\\]</nomark-math>\n")
-		s.html.WriteString("<span class=\"markup\">%%%</span>\n")
 		s.html.WriteString("</div>\n")
 
 		skipBlankLines(s)
@@ -129,7 +128,6 @@ func openBlock(s *state, nextBlock blockMode) {
 		s.text.WriteString("%%%\n")
 
 		s.html.WriteString("<div>\n")
-		s.html.WriteString("<span class=\"markup\">%%%</span>\n")
 		s.html.WriteString("<nomark-math class=\"mathjax\">\\[")
 	}
 
@@ -162,11 +160,9 @@ func math(s *state) bool {
 
 	s.plain.WriteString(text)
 
-	s.html.WriteString("<span class=\"markup\">%%</span>")
 	s.html.WriteString("<nomark-math class=\"mathjax\">\\(")
 	s.html.WriteString(html)
 	s.html.WriteString("\\)</nomark-math>")
-	s.html.WriteString("<span class=\"markup\">%%</span>")
 
 	s.index += 2 + end + 2
 	return true
@@ -739,6 +735,9 @@ func handleBlock(s *state) bool {
 	if s.block == blockMath {
 		s.text.WriteString(s.line)
 		s.text.WriteString("\n")
+
+		s.plain.WriteString(s.line)
+		s.plain.WriteString("\n")
 
 		s.html.WriteString(template.HTMLEscapeString(s.line))
 		s.html.WriteString("\n")

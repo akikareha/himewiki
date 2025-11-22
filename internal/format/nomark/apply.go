@@ -747,6 +747,9 @@ func handleBlock(s *state) bool {
 		s.text.WriteString(s.line)
 		s.text.WriteString("\n")
 
+		s.plain.WriteString(s.line)
+		s.plain.WriteString("\n")
+
 		s.html.WriteString(template.HTMLEscapeString(s.line))
 		s.html.WriteString("\n")
 
@@ -871,7 +874,7 @@ func Apply(fc formatConfig, title string, text string) (
 		if s.block == blockParagraph {
 			if s.index < len(s.input) {
 				line := s.input[s.index:s.lineEnd]
-				if isBlank(line) {
+				if isBlank(line) || line == "%%%" {
 					s.html.WriteString("\n")
 				} else {
 					s.html.WriteString("<br />\n")

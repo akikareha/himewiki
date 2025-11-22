@@ -136,6 +136,24 @@ func TestApply(t *testing.T) {
 			"\nbegin\n  print\nend\n\n",
 			"<p>\n<span class=\"markup\">{{{</span>\n</p>\n<pre><code>begin\n  print\nend\n</code></pre>\n<p>\n<span class=\"markup\">}}}</span>\n</p>\n",
 		},
+		{
+			"math",
+			"WikiPage",
+			"Mass is energy: %%E=mc^2%%\n",
+			"WikiPage",
+			"Mass is energy: %%E=mc^2%%\n",
+			"Mass is energy: E=mc^2\n",
+			"<p>\nMass is energy: <span class=\"markup\">%%</span><nomark-math class=\"mathjax\">\\(E=mc^2\\)</nomark-math><span class=\"markup\">%%</span>\n</p>\n",
+		},
+		{
+			"math block",
+			"WikiPage",
+			"Mass is energy:\n%%%\nE=mc^2\n%%%\n\n",
+			"WikiPage",
+			"Mass is energy:\n%%%\nE=mc^2\n%%%\n\n",
+			"Mass is energy:\nE=mc^2\n\n",
+			"<p>\nMass is energy:\n</p>\n<div>\n<span class=\"markup\">%%%</span>\n<nomark-math class=\"mathjax\">\\[E=mc^2\n\\]</nomark-math>\n<span class=\"markup\">%%%</span>\n</div>\n",
+		},
 	}
 
 	for _, tt := range tests {
