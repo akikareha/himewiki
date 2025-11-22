@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -38,6 +37,7 @@ type state struct {
 	block     blockMode
 	nextLine  int
 	lineEnd   int
+	line      string
 	outerDeco decoMode
 	innerDeco decoMode
 	prevLine  string
@@ -70,65 +70,8 @@ func skipBlankLines(s *state) {
 	}
 }
 
-func skipLastBlanks(s *state) {
-	i := s.index
-	for i < len(s.input) {
-		c := s.input[i]
-		if c != '\r' && c != '\n' && c != ' ' && c != '\t' {
-			break
-		}
-		i += 1
-	}
-	if i >= len(s.input) {
-		s.index = i
-	}
-}
-
-func nextLine(s *state) {
-	if s.nextLine < s.index {
-		s.nextLine = s.index
-		s.lineEnd = s.index
-	}
-	s.index = s.nextLine
-	if s.nextLine >= len(s.input) {
-		return
-	}
-	i := strings.IndexByte(s.input[s.nextLine:], '\n')
-	if i == -1 {
-		s.nextLine = len(s.input)
-		s.lineEnd = len(s.input)
-		return
-	}
-	start := s.nextLine
-	end := s.nextLine + i
-	s.nextLine = end + 1
-	if end > 0 && s.input[end-1] == '\r' {
-		end -= 1
-	}
-	nonBlank := end
-	for nonBlank > 0 {
-		c := s.input[nonBlank-1]
-		if c != ' ' && c != '\t' {
-			break
-		}
-		nonBlank -= 1
-	}
-	// in raw block preserve one white space
-	if s.block == blockRaw {
-		if nonBlank == start {
-			c := s.input[nonBlank]
-			if c == ' ' || c == '\t' {
-				nonBlank += 1
-			}
-		}
-	}
-	s.lineEnd = nonBlank
-}
-
 func closeBlock(s *state, nextBlock blockMode) {
-	if s.block == blockNone {
-		// do nothing
-	} else if s.block == blockParagraph {
+	if s.block == blockParagraph {
 		s.html.WriteString("</p>\n")
 		if nextBlock != blockRaw && nextBlock != blockCode {
 			skipBlankLines(s)
@@ -150,13 +93,16 @@ func closeBlock(s *state, nextBlock blockMode) {
 
 		skipBlankLines(s)
 	}
+
 	s.block = blockNone
 }
 
 func openBlock(s *state, nextBlock blockMode) {
-	if nextBlock == blockNone {
-		// do nothing
-	} else if nextBlock == blockParagraph {
+	if s.block != blockNone {
+		panic("must be called in none block")
+	}
+
+	if nextBlock == blockParagraph {
 		s.html.WriteString("<p>\n")
 	} else if nextBlock == blockRaw {
 		s.html.WriteString("<pre><code>")
@@ -164,10 +110,12 @@ func openBlock(s *state, nextBlock blockMode) {
 		s.html.WriteString("<pre><code>")
 	} else if nextBlock == blockMath {
 		s.text.WriteString("%%%\n")
+
 		s.html.WriteString("<div>\n")
 		s.html.WriteString("<span class=\"markup\">%%%</span>\n")
 		s.html.WriteString("<nomark-math class=\"mathjax\">\\[")
 	}
+
 	s.block = nextBlock
 }
 
@@ -242,7 +190,7 @@ func strong(fc formatConfig, s *state) bool {
 	}
 	s.index += 2
 
-	markup(fc, s)
+	applyLine(fc, s)
 
 	if s.innerDeco == decoStrong {
 		s.html.WriteString("</strong>")
@@ -298,7 +246,7 @@ func em(fc formatConfig, s *state) bool {
 	}
 	s.index += 2
 
-	markup(fc, s)
+	applyLine(fc, s)
 
 	if s.innerDeco == decoEm {
 		s.html.WriteString("</em>")
@@ -564,7 +512,7 @@ func isBlank(line string) bool {
 	return true
 }
 
-func markup(fc formatConfig, s *state) {
+func applyLine(fc formatConfig, s *state) {
 	for s.index < s.lineEnd {
 		if math(fc, s) {
 			continue
@@ -588,11 +536,50 @@ func markup(fc formatConfig, s *state) {
 	}
 }
 
-var headingRe = regexp.MustCompile("^!!!(!*) (.+?) !!!(!*)$")
+func nextLine(s *state) {
+	if s.nextLine < s.index {
+		s.nextLine = s.index
+		s.lineEnd = s.index
+	}
+	s.index = s.nextLine
+	if s.nextLine >= len(s.input) {
+		return
+	}
+	i := strings.IndexByte(s.input[s.nextLine:], '\n')
+	if i == -1 {
+		s.nextLine = len(s.input)
+		s.lineEnd = len(s.input)
+		return
+	}
+	start := s.nextLine
+	end := s.nextLine + i
+	s.nextLine = end + 1
+	if end > 0 && s.input[end-1] == '\r' {
+		end -= 1
+	}
+	nonBlank := end
+	for nonBlank > 0 {
+		c := s.input[nonBlank-1]
+		if c != ' ' && c != '\t' {
+			break
+		}
+		nonBlank -= 1
+	}
+	// in raw block preserve one white space
+	if s.block == blockRaw {
+		if nonBlank == start {
+			c := s.input[nonBlank]
+			if c == ' ' || c == '\t' {
+				nonBlank += 1
+			}
+		}
+	}
+	s.lineEnd = nonBlank
+}
 
 const headingMaxLevel = 3
 
-func parseHeading(s *state, line string) (int, string, bool) {
+func parseHeading(s *state) (int, string, bool) {
 	if s.block == blockRaw || s.block == blockCode || s.block == blockMath {
 		return 0, "", false
 	}
@@ -600,56 +587,53 @@ func parseHeading(s *state, line string) (int, string, bool) {
 		return 0, "", false
 	}
 
-	matches := headingRe.FindStringSubmatch(line)
-	if matches == nil {
-		return 0, "", false
+	if strings.HasPrefix(s.line, "!!!!! ") && strings.HasSuffix(s.line, " !!!!!") {
+		return 1, s.line[6:len(s.line) - 6], true
+	}
+	if strings.HasPrefix(s.line, "!!!! ") && strings.HasSuffix(s.line, " !!!!") {
+		return 2, s.line[5:len(s.line) - 5], true
+	}
+	if strings.HasPrefix(s.line, "!!! ") && strings.HasSuffix(s.line, " !!!") {
+		return 3, s.line[4:len(s.line) - 4], true
 	}
 
-	prefix := matches[1]
-	suffix := matches[3]
-	if len(prefix) != len(suffix) {
-		return 0, "", false
-	}
-	level := headingMaxLevel - len(prefix)
-	if level < 1 {
-		return 0, "", false
-	}
-
-	title := matches[2]
-	return level, title, true
+	return 0, "", false
 }
 
-func nomarkLine(fc formatConfig, s *state) {
-	line := s.input[s.index:s.lineEnd]
+func hasNextLine(s *state) bool {
+	return s.nextLine < len(s.input)
+}
 
+func applyBlock(fc formatConfig, s *state) bool {
 	// open raw block
-	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "" && strings.HasPrefix(line, " ") {
+	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "" && strings.HasPrefix(s.line, " ") {
 		ensureBlock(s, blockRaw)
 
-		s.text.WriteString(line)
+		s.text.WriteString(s.line)
 		s.text.WriteString("\n")
 
-		s.plain.WriteString(line)
+		s.plain.WriteString(s.line)
 		s.plain.WriteString("\n")
 
-		s.html.WriteString(template.HTMLEscapeString(line))
+		s.html.WriteString(template.HTMLEscapeString(s.line))
 		s.html.WriteString("\n")
 
 		nextLine(s)
-		return
+		return true
 	}
 
 	// open code block
-	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "{{{" && isBlank(line) {
+	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && s.prevLine == "{{{" && isBlank(s.line) {
 		ensureBlock(s, blockCode)
 		nextLine(s)
 		s.firstCode = true
-		return
+		return true
 	}
 
-	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && isBlank(line) {
+	// close paragraph block
+	if s.block != blockRaw && s.block != blockCode && s.block != blockMath && isBlank(s.line) {
 		for s.index < len(s.input) {
-			closeBlock(s, blockParagraph)
+			ensureBlock(s, blockNone)
 			nextLine(s)
 			if s.index >= len(s.input) {
 				break
@@ -659,51 +643,56 @@ func nomarkLine(fc formatConfig, s *state) {
 				break
 			}
 		}
-		return
+		return true
 	}
 
 	// close code block
-	if s.block == blockCode && s.prevLine == "" && line == "}}}" {
-		ensureBlock(s, blockParagraph)
+	if s.block == blockCode && s.prevLine == "" && s.line == "}}}" {
+		ensureBlock(s, blockNone)
 		s.text.WriteString("}}}\n\n")
 		s.plain.WriteString("\n")
 		s.html.WriteString("<span class=\"markup\">}}}</span>\n")
 		nextLine(s)
-		return
+		return true
 	}
 
 	// open math block
-	if s.block != blockMath && s.block != blockRaw && s.block != blockCode && line == "%%%" {
+	if s.block != blockMath && s.block != blockRaw && s.block != blockCode && s.line == "%%%" {
 		ensureBlock(s, blockMath)
 		nextLine(s)
-		return
+		return true
 	}
 
 	// close math block
-	if s.block == blockMath && line == "%%%" {
-		closeBlock(s, blockParagraph)
+	if s.block == blockMath && s.line == "%%%" {
+		ensureBlock(s, blockNone)
 		nextLine(s)
-		return
+		return true
 	}
 
 	// headings
-	if level, title, ok := parseHeading(s, line); ok {
+	if level, title, ok := parseHeading(s); ok {
 		if !isBlank(s.prevLine) {
 			s.text.WriteString("\n")
 			s.plain.WriteString("\n")
 		}
 
-		s.text.WriteString(line)
-		s.text.WriteString("\n\n")
+		s.text.WriteString(s.line)
+		s.text.WriteString("\n")
 
 		s.plain.WriteString(title)
-		s.plain.WriteString("\n\n")
+		s.plain.WriteString("\n")
+
+		if hasNextLine(s) {
+			s.text.WriteString("\n")
+			s.plain.WriteString("\n")
+		}
 
 		if level == 1 && s.title == "" {
 			s.title = title
 			nextLine(s)
 		} else {
-			closeBlock(s, blockNone)
+			ensureBlock(s, blockNone)
 			titleHTML := template.HTMLEscapeString(title)
 			levelStr := strconv.Itoa(level)
 			var buf strings.Builder
@@ -725,22 +714,22 @@ func nomarkLine(fc formatConfig, s *state) {
 			s.html.WriteString(">\n")
 			nextLine(s)
 		}
-		return
+		return true
 	}
 
 	// in raw block
-	if s.block == blockRaw && strings.HasPrefix(line, " ") {
-		s.text.WriteString(line)
+	if s.block == blockRaw && strings.HasPrefix(s.line, " ") {
+		s.text.WriteString(s.line)
 		s.text.WriteString("\n")
 
-		s.plain.WriteString(line)
+		s.plain.WriteString(s.line)
 		s.plain.WriteString("\n")
 
-		s.html.WriteString(template.HTMLEscapeString(line))
+		s.html.WriteString(template.HTMLEscapeString(s.line))
 		s.html.WriteString("\n")
 
 		nextLine(s)
-		return
+		return true
 	}
 
 	// in code block
@@ -751,85 +740,61 @@ func nomarkLine(fc formatConfig, s *state) {
 			s.firstCode = false
 		}
 
-		s.text.WriteString(line)
+		s.text.WriteString(s.line)
 		s.text.WriteString("\n")
 
-		s.plain.WriteString(line)
+		s.plain.WriteString(s.line)
 		s.plain.WriteString("\n")
 
-		s.html.WriteString(template.HTMLEscapeString(line))
+		s.html.WriteString(template.HTMLEscapeString(s.line))
 		s.html.WriteString("\n")
 
 		nextLine(s)
-		return
+		return true
 	}
 
 	// in math block
 	if s.block == blockMath {
-		s.text.WriteString(line)
+		s.text.WriteString(s.line)
 		s.text.WriteString("\n")
 
-		s.html.WriteString(template.HTMLEscapeString(line))
+		s.html.WriteString(template.HTMLEscapeString(s.line))
 		s.html.WriteString("\n")
 
 		nextLine(s)
-		return
+		return true
 	}
 
-	if line == "{{{" {
+	if s.line == "{{{" {
 		s.text.WriteString("{{{\n")
 		s.html.WriteString("<span class=\"markup\">{{{</span>\n")
 		nextLine(s)
-		return
+		return true
 	}
 
-	if line == "" {
+	if s.line == "" {
 		ensureBlock(s, blockNone)
 		s.text.WriteString("\n")
 		s.plain.WriteString("\n")
 		nextLine(s)
-		return
+		return true
 	}
 
-	ensureBlock(s, blockParagraph)
-	for s.index < s.lineEnd {
-		c := s.input[s.index]
-		if c != ' ' {
+	return false
+}
+
+func skipLastBlanks(s *state) {
+	i := s.index
+	for i < len(s.input) {
+		c := s.input[i]
+		if c != '\r' && c != '\n' && c != ' ' && c != '\t' {
 			break
 		}
-		s.text.WriteString(" ")
-		s.html.WriteString("&nbsp;")
-		s.index += 1
+		i += 1
 	}
-	markup(fc, s)
-
-	s.text.WriteString("\n")
-	s.plain.WriteString("\n")
-
-	nextLine(s)
-
-	if s.block == blockParagraph {
-		if s.index < len(s.input) {
-			line = s.input[s.index:s.lineEnd]
-			if isBlank(line) {
-				s.html.WriteString("\n")
-			} else {
-				s.html.WriteString("<br />\n")
-			}
-		} else {
-			s.html.WriteString("\n")
-		}
+	if i >= len(s.input) {
+		s.index = i
 	}
-
-	if s.index < len(s.input) {
-		line = s.input[s.index:s.lineEnd]
-		if isBlank(line) {
-			s.text.WriteString("\n")
-			s.plain.WriteString("\n")
-		}
-	}
-
-	skipLastBlanks(s)
 }
 
 func Apply(fc formatConfig, title string, text string) (string, string, string, string) {
@@ -842,26 +807,68 @@ func Apply(fc formatConfig, title string, text string) (string, string, string, 
 		block:     blockNone,
 		nextLine:  0,
 		lineEnd:   0,
+		line:      "",
 		outerDeco: decoNone,
 		innerDeco: decoNone,
-		prevLine:  text[0:0],
+		prevLine:  "",
 		firstCode: false,
 		title:     "",
 	}
 
 	skipBlankLines(&s)
 	nextLine(&s)
-	var line string
 	for s.index < len(s.input) {
-		s.prevLine = line
-		line = s.input[s.index:s.lineEnd]
+		s.prevLine = s.line
+		s.line = s.input[s.index:s.lineEnd]
 
-		nomarkLine(fc, &s)
-	}
-	closeBlock(&s, blockNone)
+		if applyBlock(fc, &s) {
+			continue
+		}
 
-	if s.title != "" {
-		title = s.title
+		ensureBlock(&s, blockParagraph)
+		for s.index < s.lineEnd {
+			c := s.input[s.index]
+			if c != ' ' {
+				break
+			}
+			s.text.WriteString(" ")
+			s.html.WriteString("&nbsp;")
+			s.index += 1
+		}
+		applyLine(fc, &s)
+
+		s.text.WriteString("\n")
+		s.plain.WriteString("\n")
+
+		nextLine(&s)
+
+		if s.block == blockParagraph {
+			if s.index < len(s.input) {
+				line := s.input[s.index:s.lineEnd]
+				if isBlank(line) {
+					s.html.WriteString("\n")
+				} else {
+					s.html.WriteString("<br />\n")
+				}
+			} else {
+				s.html.WriteString("\n")
+			}
+		}
+
+		if s.index < len(s.input) {
+			line := s.input[s.index:s.lineEnd]
+			if isBlank(line) {
+				s.text.WriteString("\n")
+				s.plain.WriteString("\n")
+			}
+		}
+
+		skipLastBlanks(&s)
 	}
-	return title, s.text.String(), s.plain.String(), s.html.String()
+	ensureBlock(&s, blockNone)
+
+	if s.title == "" {
+		s.title = title
+	}
+	return s.title, s.text.String(), s.plain.String(), s.html.String()
 }

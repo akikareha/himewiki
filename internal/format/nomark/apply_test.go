@@ -64,6 +64,42 @@ func TestApply(t *testing.T) {
 			"This is a test.\nI love tests.\n",
 			"<p>\nThis is a test.<br />\nI love tests.\n</p>\n",
 		},
+		{
+			"paragraphs",
+			"WikiPage",
+			"This is a test.\nI love tests.\n\nHello, World!\n",
+			"WikiPage",
+			"This is a test.\nI love tests.\n\nHello, World!\n",
+			"This is a test.\nI love tests.\n\nHello, World!\n",
+			"<p>\nThis is a test.<br />\nI love tests.\n</p>\n<p>\nHello, World!\n</p>\n",
+		},
+		{
+			"heading 1",
+			"WikiPage",
+			"!!!!! Test !!!!!\n",
+			"Test",
+			"!!!!! Test !!!!!\n",
+			"Test\n",
+			"",
+		},
+		{
+			"heading 2",
+			"WikiPage",
+			"!!!! Test !!!!\n",
+			"WikiPage",
+			"!!!! Test !!!!\n",
+			"Test\n",
+			"<h2><span class=\"markup\">!!!!</span> Test <span class=\"markup\">!!!!</span></h2>\n",
+		},
+		{
+			"heading 3",
+			"WikiPage",
+			"!!! Test !!!\n",
+			"WikiPage",
+			"!!! Test !!!\n",
+			"Test\n",
+			"<h3><span class=\"markup\">!!!</span> Test <span class=\"markup\">!!!</span></h3>\n",
+		},
 	}
 
 	for _, tt := range tests {
