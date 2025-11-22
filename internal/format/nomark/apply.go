@@ -471,25 +471,12 @@ func html(s *state) bool {
 	return false
 }
 
-func raw(s *state) bool {
+func raw(s *state) {
 	r, size := utf8.DecodeRuneInString(s.input[s.index:])
 	s.index += size
 	s.text.WriteRune(r)
 	s.plain.WriteRune(r)
 	s.html.WriteRune(r)
-	return true
-}
-
-func isBlank(line string) bool {
-	for _, r := range line {
-		if r != ' ' && r != '\t' {
-			return false
-		}
-		if r != '\r' && r != '\n' {
-			return false
-		}
-	}
-	return true
 }
 
 func handleLine(s *state) {
@@ -508,12 +495,22 @@ func handleLine(s *state) {
 			continue
 		} else if html(s) {
 			continue
-		} else if raw(s) {
-			continue
 		} else {
-			panic("program error")
+			raw(s)
 		}
 	}
+}
+
+func isBlank(line string) bool {
+	for _, r := range line {
+		switch r {
+			case ' ', '\t', '\r', '\n':
+				// OK
+			default:
+				return false
+		}
+	}
+	return true
 }
 
 func nextLine(s *state) {
