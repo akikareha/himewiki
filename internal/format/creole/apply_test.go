@@ -146,6 +146,15 @@ func TestApply(t *testing.T) {
 			"<p>\nThis <em>is</em> a test.\n</p>\n",
 		},
 		{
+			"wikilink",
+			"WikiPage",
+			"See also [[Test]] page.\n",
+			"WikiPage",
+			"See also [[Test]] page.\n",
+			"See also Test page.\n",
+			"<p>\nSee also <a href=\"/Test\" class=\"link\">Test</a> page.\n</p>\n",
+		},
+		{
 			"code",
 			"WikiPage",
 			"{{{\nbegin\n  print\nend\n}}}\n",

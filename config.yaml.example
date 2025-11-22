@@ -90,6 +90,21 @@ filter:
       Each paragraph should remain separated by one blank line.
       Keep all existing blank lines between paragraphs unchanged.
 
+    ### WikiName and case preservation
+    - Words written in PascalCase or CamelCase (such as HimeWikiPhilosophy, AiGnomeTask, or HarekaPrincess)
+      are considered WikiNames.  
+      These are part of the markup and **must not be split, lowercased, or rewritten**.
+    - Do not insert spaces, hyphens, or punctuation inside WikiNames.
+    - Do not change the capitalization of WikiNames.
+    - Do not translate or rephrase WikiNames.
+    - Treat WikiNames as indivisible symbols, similar to `[[links]]`.
+  creole: |
+    ## Markup rules
+    - Interpret the content as Wiki Creole.
+  markdown: |
+    ## Markup rules
+    - Interpret the content as Markdown.
+  nomark: |
     ## Markup rules
     - Interpret the content as Nomark, a custom minimal format that is mostly plain text.
     - Nomark is mostly plain text but supports a few minimal markup rules,
@@ -102,15 +117,6 @@ filter:
       In Nomark syntax, headings are written like !!! Title !!!
       with three or more ! on each side. The exact count of !
       characters must be preserved.
-
-    ### WikiName and case preservation
-    - Words written in PascalCase or CamelCase (such as HimeWikiPhilosophy, AiGnomeTask, or HarekaPrincess)
-      are considered WikiNames.  
-      These are part of the markup and **must not be split, lowercased, or rewritten**.
-    - Do not insert spaces, hyphens, or punctuation inside WikiNames.
-    - Do not change the capitalization of WikiNames.
-    - Do not translate or rephrase WikiNames.
-    - Treat WikiNames as indivisible symbols, similar to `[[links]]`.
 
 image-filter:
   agent: "ChatGPT"

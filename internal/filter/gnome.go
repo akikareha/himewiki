@@ -8,6 +8,7 @@ import (
 	"github.com/openai/openai-go/v3/option"
 
 	"github.com/akikareha/himewiki/internal/config"
+	"github.com/akikareha/himewiki/internal/format"
 )
 
 func gnomeWithChatGPT(cfg *config.Config, title string, content string) (string, error) {
@@ -22,12 +23,22 @@ func gnomeWithChatGPT(cfg *config.Config, title string, content string) (string,
 
 	message := "title: " + title + "\n\ncontent:\n" + content
 
+	mode := format.Detect(cfg, content)
+	var formatPrompt string
+	if mode == "creole" {
+		formatPrompt = cfg.Filter.Creole
+	} else if mode == "markdown" {
+		formatPrompt = cfg.Filter.Markdown
+	} else {
+		formatPrompt = cfg.Filter.Nomark
+	}
+
 	resp, err := client.Chat.Completions.New(
 		context.Background(),
 		openai.ChatCompletionNewParams{
 			Model: openai.ChatModelGPT4o,
 			Messages: []openai.ChatCompletionMessageParamUnion{
-				openai.SystemMessage(cfg.Gnome.System + "\n" + cfg.Filter.Common),
+				openai.SystemMessage(cfg.Gnome.System + "\n" + cfg.Filter.Common + "\n" + formatPrompt),
 				openai.UserMessage(cfg.Gnome.Prompt + message),
 			},
 			Temperature: openai.Float(cfg.Gnome.Temperature),

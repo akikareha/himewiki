@@ -9,6 +9,7 @@ import (
 	"github.com/openai/openai-go/v3/option"
 
 	"github.com/akikareha/himewiki/internal/config"
+	"github.com/akikareha/himewiki/internal/format"
 )
 
 func withChatGPT(cfg *config.Config, title string, content string) (string, error) {
@@ -23,12 +24,22 @@ func withChatGPT(cfg *config.Config, title string, content string) (string, erro
 
 	message := "title: " + title + "\n\ncontent:\n" + content
 
+	mode := format.Detect(cfg, content)
+	var formatPrompt string
+	if mode == "creole" {
+		formatPrompt = cfg.Filter.Creole
+	} else if mode == "markdown" {
+		formatPrompt = cfg.Filter.Markdown
+	} else {
+		formatPrompt = cfg.Filter.Nomark
+	}
+
 	resp, err := client.Chat.Completions.New(
 		context.Background(),
 		openai.ChatCompletionNewParams{
 			Model: openai.ChatModelGPT4o,
 			Messages: []openai.ChatCompletionMessageParamUnion{
-				openai.SystemMessage(cfg.Filter.System + "\n" + cfg.Filter.Common),
+				openai.SystemMessage(cfg.Filter.System + "\n" + cfg.Filter.Common + "\n" + formatPrompt),
 				openai.UserMessage(cfg.Filter.Prompt + message),
 			},
 			Temperature: openai.Float(cfg.Filter.Temperature),

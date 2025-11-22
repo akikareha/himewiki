@@ -51,6 +51,9 @@ type Config struct {
 		Prompt      string  `yaml:"prompt"`
 		Temperature float64 `yaml:"temperature"`
 		Common      string  `yaml:"common"`
+		Creole      string  `yaml:"creole"`
+		Markdown    string  `yaml:"markdown"`
+		Nomark      string  `yaml:"nomark"`
 	} `yaml:"filter"`
 
 	ImageFilter struct {
