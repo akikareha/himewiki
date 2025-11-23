@@ -11,23 +11,23 @@ import (
 func Detect(cfg *config.Config, text string) string {
 	if len(text) > 0 {
 		// detect markup by very first character of input text.
+		// * '!' : Nomark
 		// * '=' : Creole
 		// * '#' : Markdown
-		// * '!' : Nomark
 		head := text[0]
-		if head == '=' {
+		if head == '!' {
+			return "nomark"
+		} else if head == '=' {
 			return "creole"
 		} else if head == '#' {
 			return "markdown"
-		} else if head == '!' {
-			return "nomark"
 		}
 	}
 
 	// no headers
 	// Chosen by config
 	conf := cfg.Wiki.Format
-	if conf == "creole" || conf == "markdown" || conf == "nomark" {
+	if conf == "nomark" || conf == "creole" || conf == "markdown" {
 		return conf
 	}
 
@@ -46,7 +46,7 @@ func Apply(cfg *config.Config, title string, text string) (string, string, strin
 	} else if mode == "markdown" {
 		fc := markdown.ToFormatConfig(cfg)
 		return markdown.Apply(fc, title, text)
-	} else {
+	} else { // nomark
 		fc := nomark.ToFormatConfig(cfg)
 		return nomark.Apply(fc, title, text)
 	}

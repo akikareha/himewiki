@@ -98,12 +98,6 @@ filter:
     - Do not change the capitalization of WikiNames.
     - Do not translate or rephrase WikiNames.
     - Treat WikiNames as indivisible symbols, similar to `[[links]]`.
-  creole: |
-    ## Markup rules
-    - Interpret the content as Wiki Creole.
-  markdown: |
-    ## Markup rules
-    - Interpret the content as Markdown.
   nomark: |
     ## Markup rules
     - Interpret the content as Nomark, a custom minimal format that is mostly plain text.
@@ -117,6 +111,12 @@ filter:
       In Nomark syntax, headings are written like !!! Title !!!
       with three or more ! on each side. The exact count of !
       characters must be preserved.
+  creole: |
+    ## Markup rules
+    - Interpret the content as WikiCreole.
+  markdown: |
+    ## Markup rules
+    - Interpret the content as Markdown.
 
 image-filter:
   agent: "ChatGPT"
