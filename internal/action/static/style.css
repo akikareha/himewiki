@@ -40,6 +40,12 @@ body {
 	}
 }
 
+.horizon {
+	width: 100%;
+	background: #777;
+	border-radius: 0.5em;
+}
+
 pre {
 	white-space: pre-wrap;
 	word-wrap: break-word;

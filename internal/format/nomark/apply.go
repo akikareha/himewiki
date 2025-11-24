@@ -15,6 +15,7 @@ type blockMode int
 const (
 	blockNone blockMode = iota
 	blockParagraph
+	blockHorizon
 	blockRaw
 	blockCode
 	blockMath
@@ -94,6 +95,9 @@ func closeBlock(s *state, nextBlock blockMode) {
 		if nextBlock != blockRaw && nextBlock != blockCode {
 			skipBlankLines(s)
 		}
+	} else if s.block == blockHorizon {
+		s.html.WriteString("</div>\n")
+		skipBlankLines(s)
 	} else if s.block == blockRaw {
 		s.html.WriteString("</code></pre>\n")
 		skipBlankLines(s)
@@ -122,6 +126,8 @@ func openBlock(s *state, nextBlock blockMode) {
 
 	if nextBlock == blockParagraph {
 		s.html.WriteString("<p>\n")
+	} else if nextBlock == blockHorizon {
+		s.html.WriteString("<div class=\"horizon\">\n")
 	} else if nextBlock == blockRaw {
 		s.html.WriteString("<pre><code>")
 	} else if nextBlock == blockCode {
@@ -587,6 +593,25 @@ func hasNextLine(s *state) bool {
 }
 
 func handleBlock(s *state) bool {
+	// horizon
+	if (s.block == blockNone || s.block == blockParagraph) &&
+		strings.HasPrefix(s.line, "-") && strings.HasSuffix(s.line, "-") {
+		ensureBlock(s, blockHorizon)
+
+		s.text.WriteString(s.line)
+		s.text.WriteString("\n")
+
+		s.plain.WriteString(s.line)
+		s.plain.WriteString("\n")
+
+		s.html.WriteString(template.HTMLEscapeString(s.line))
+		s.html.WriteString("\n")
+
+		ensureBlock(s, blockNone)
+		nextLine(s)
+		return true
+	}
+
 	// open raw block
 	if s.block != blockRaw && s.block != blockCode &&
 		s.block != blockMath && s.prevLine == "" &&
