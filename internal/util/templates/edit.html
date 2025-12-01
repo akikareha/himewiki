@@ -16,6 +16,12 @@
 </head>
 <body>
 
+<header class="menu">
+<a href="#main">Skip</a>
+<a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
+<a href="/{{.Name | pathescape}}">Cancel</a>
+</header>
+<main id="#main">
 {{if .Previewed}}
 <h1>Preview, Not Saved - <a href="/?a=search&t=content&w={{.SearchName | urlquery}}">{{.Title}}</a></h1>
 
@@ -40,10 +46,12 @@
 {{end}}
 </form>
 
-<div class="menu">
+</main>
+<footer class="menu">
+<br />
 <a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
 <a href="/{{.Name | pathescape}}">Cancel</a>
-</div>
+</footer>
 
 </body>
 </html>

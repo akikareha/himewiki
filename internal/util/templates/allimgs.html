@@ -10,10 +10,12 @@
 </head>
 <body>
 
-<div class="menu">
+<header class="menu">
+<a href="#main">Skip</a>
 <a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
-<a href="/?a=upload">Back</a>
-</div>
+<a href="/?a=upload">Upload</a>
+</header>
+<main id="main">
 
 <h1>All Images</h1>
 
@@ -35,11 +37,12 @@ URL: {{$.Base}}{{.}}<br />
 <a href="/?a=allimgs&p={{.NextPage}}">Next</a>
 </div>
 
-<div class="menu">
+</main>
+<footer class="menu">
 <br />
 <a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
-<a href="/?a=upload">Back</a>
-</div>
+<a href="/?a=upload">Upload</a>
+</footer>
 
 </body>
 </html>

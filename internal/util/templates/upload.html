@@ -11,6 +11,13 @@
 </head>
 <body>
 
+<header class="menu">
+<a href="#main">Skip</a>
+<a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
+<a href="/?a=allimgs">All Imgs</a>
+</header>
+<main id="main">
+
 <h1>Upload</h1>
 
 <form action="/?a=upload" method="POST" enctype="multipart/form-data">
@@ -28,11 +35,11 @@ URL: {{.Base}}{{.Name}}<br />
 </p>
 {{end}}
 
-<div class="menu">
+</main>
+<footer class="menu">
 <a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
 <a href="/?a=allimgs">All Imgs</a>
-<a href="/">Back</a>
-</div>
+</footer>
 
 </body>
 </html>

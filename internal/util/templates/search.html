@@ -12,9 +12,17 @@
 <body>
 <a id="top"></a>
 
+<header class="menu">
+<a href="#main">Skip</a>
+<a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
+<a href="/?a=recent">Recent</a>
+<a href="/?a=all">All</a>
+</header>
+<main id="main">
+
 <h1>Search</h1>
 
-Name Search
+<div>Name Search</div>
 <form action="/?a=search" method="GET">
 <input type="hidden" name="a" value="search" />
 <input type="hidden" name="t" value="name" />
@@ -22,20 +30,13 @@ Name Search
 <input type="submit" value="Go" />
 </form>
 
-Content Search
+<div>Content Search</div>
 <form action="/" method="GET">
 <input type="hidden" name="a" value="search" />
 <input type="hidden" name="t" value="content" />
 <input type="text" name="w" value="{{.Word}}" />
 <input type="submit" value="Go" />
 </form>
-
-<div class="menu">
-<a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
-<a href="/">Back</a>
-<a href="/?a=recent">Recent</a>
-<a href="/?a=all">All</a>
-</div>
 
 {{if .Word}}
 <h2>Results for "{{.Word}}"</h2>
@@ -53,9 +54,11 @@ Content Search
 </div>
 {{end}}
 
-<div class="menu">
+</main>
+<footer class="menu">
 <br />
 <a href="#top">Top</a>
-</div>
+</footer>
+
 </body>
 </html>

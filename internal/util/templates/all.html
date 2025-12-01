@@ -10,10 +10,11 @@
 </head>
 <body>
 
-<div class="menu">
+<header class="menu">
+<a href="#main">Skip</a>
 <a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
-<a href="/">Back</a>
-</div>
+</header>
+<main id="main">
 
 <h1>All</h1>
 
@@ -30,11 +31,11 @@
 <a href="/?a=all&p={{.NextPage}}">Next</a>
 </div>
 
-<div class="menu">
+</main>
+<footer class="menu">
 <br />
 <a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
-<a href="/">Back</a>
-</div>
+</footer>
 
 </body>
 </html>
