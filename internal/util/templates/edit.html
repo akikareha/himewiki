@@ -39,6 +39,9 @@
 <form action="/{{.Name | pathescape}}?a=edit" method="POST">
 <input type="hidden" name="previewed" value="{{.Previewed}}" />
 <input type="hidden" name="revision_id" value="{{.RevisionID}}" />
+{{if .Previewed}}
+<input type="submit" name="save" value="Save" /><br />
+{{end}}
 <textarea name="content" rows="16" cols="64">{{.Text}}</textarea><br />
 <input type="submit" name="preview" value="Preview" />
 {{if .Previewed}}
