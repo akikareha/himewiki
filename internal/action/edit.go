@@ -128,6 +128,9 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		searchName = searchName[:len(searchName)-5]
 	}
 
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Pragma", "no-cache")
+
 	tmpl := templates.New("edit.html")
 	tmpl.Execute(w, struct {
 		SiteName   string
