@@ -7,7 +7,7 @@ import (
 
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
-	"github.com/akikareha/himewiki/internal/util"
+	"github.com/akikareha/himewiki/internal/templates"
 )
 
 func Search(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
@@ -41,7 +41,7 @@ func Search(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		searchType = "name"
 	}
 
-	tmpl := util.NewTemplate("search.html")
+	tmpl := templates.New("search.html")
 	tmpl.Execute(w, struct {
 		SiteName string
 		Type     string

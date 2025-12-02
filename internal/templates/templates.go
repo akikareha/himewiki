@@ -1,4 +1,4 @@
-package util
+package templates
 
 import (
 	"embed"
@@ -15,7 +15,7 @@ func formatDiff(text string) template.HTML {
 	return template.HTML(format.Diff(text))
 }
 
-func NewTemplate(name string) *template.Template {
+func New(name string) *template.Template {
 	funcMap := template.FuncMap{
 		"pathescape": url.PathEscape,
 		"fmtdiff":    formatDiff,

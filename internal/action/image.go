@@ -12,7 +12,7 @@ import (
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
 	"github.com/akikareha/himewiki/internal/filter"
-	"github.com/akikareha/himewiki/internal/util"
+	"github.com/akikareha/himewiki/internal/templates"
 )
 
 func ViewImage(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
@@ -85,7 +85,7 @@ func Upload(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		}
 	}
 
-	tmpl := util.NewTemplate("upload.html")
+	tmpl := templates.New("upload.html")
 	tmpl.Execute(w, struct {
 		Base     string
 		SiteName string
@@ -112,7 +112,7 @@ func AllImages(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 		return
 	}
 
-	tmpl := util.NewTemplate("allimgs.html")
+	tmpl := templates.New("allimgs.html")
 	tmpl.Execute(w, struct {
 		Base     string
 		SiteName string

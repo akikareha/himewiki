@@ -11,6 +11,7 @@ import (
 	"github.com/akikareha/himewiki/internal/data"
 	"github.com/akikareha/himewiki/internal/filter"
 	"github.com/akikareha/himewiki/internal/format"
+	"github.com/akikareha/himewiki/internal/templates"
 	"github.com/akikareha/himewiki/internal/util"
 )
 
@@ -21,7 +22,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		return
 	}
 
-	tmpl := util.NewTemplate("view.html")
+	tmpl := templates.New("view.html")
 	title, _, plain, rendered := format.Apply(cfg, params.DbName, content)
 	summary := format.TrimForSummary(plain, 144)
 
@@ -127,7 +128,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		searchName = searchName[:len(searchName)-5]
 	}
 
-	tmpl := util.NewTemplate("edit.html")
+	tmpl := templates.New("edit.html")
 	tmpl.Execute(w, struct {
 		SiteName   string
 		Name       string
@@ -166,7 +167,7 @@ func All(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Par
 		return
 	}
 
-	tmpl := util.NewTemplate("all.html")
+	tmpl := templates.New("all.html")
 	tmpl.Execute(w, struct {
 		SiteName string
 		Pages    []string
@@ -193,7 +194,7 @@ func Recent(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		return
 	}
 
-	tmpl := util.NewTemplate("recent.html")
+	tmpl := templates.New("recent.html")
 	tmpl.Execute(w, struct {
 		SiteName string
 		Records  []data.RecentRecord

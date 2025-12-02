@@ -10,6 +10,7 @@ import (
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
 	"github.com/akikareha/himewiki/internal/format"
+	"github.com/akikareha/himewiki/internal/templates"
 	"github.com/akikareha/himewiki/internal/util"
 )
 
@@ -26,7 +27,7 @@ func Revisions(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 		return
 	}
 
-	tmpl := util.NewTemplate("revisions.html")
+	tmpl := templates.New("revisions.html")
 	tmpl.Execute(w, struct {
 		SiteName  string
 		Name      string
@@ -74,7 +75,7 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 		return
 	}
 
-	tmpl := util.NewTemplate("revision.html")
+	tmpl := templates.New("revision.html")
 	title, _, _, rendered := format.Apply(cfg, params.DbName, content)
 
 	_, current, _ := data.Load(params.DbName)
