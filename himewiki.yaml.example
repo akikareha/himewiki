@@ -18,7 +18,8 @@ vacuum:
 site:
   base: "https://wiki.example.org/"
   name: "HimeWiki"
-  card: "https://icon.example.org/hime/card.png"
+  static: "./static"
+  card: "https://wiki.example.org/static/card.png"
 
 wiki:
   front: "FrontPage"

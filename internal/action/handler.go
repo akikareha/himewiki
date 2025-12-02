@@ -87,8 +87,6 @@ func handle(cfg *config.Config, w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		switch params.Action {
-		case "static":
-			Static(cfg, w, r, &params)
 		case "", "view":
 			ViewImage(cfg, w, r, &params)
 		default:
@@ -99,6 +97,9 @@ func handle(cfg *config.Config, w http.ResponseWriter, r *http.Request) {
 
 func Handler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if handleStatic(cfg, w, r) {
+			return
+		}
 		handle(cfg, w, r)
 	}
 }

@@ -31,6 +31,7 @@ type Config struct {
 	Site struct {
 		Base string `yaml:"base"`
 		Name string `yaml:"name"`
+		Static string `yaml:"static"`
 		Card string `yaml:"card"`
 	} `yaml:"site"`
 

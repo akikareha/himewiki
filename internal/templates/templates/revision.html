@@ -6,8 +6,8 @@
 <meta name="format-detection" content="telephone=no" />
 <meta name="viewport" content="width=device-width" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css" />
-<link rel="stylesheet" type="text/css" href="/style.css?a=static" />
-<link rel="icon" type="image/png" href="/icon.png?a=static" />
+<link rel="stylesheet" type="text/css" href="/static/style.css" />
+<link rel="icon" type="image/png" href="/static/icon.png" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
 <script>MathJax = { options: { processHtmlClass: 'mathjax', ignoreHtmlClass: '.*' } };</script>
@@ -18,7 +18,7 @@
 
 <header class="menu">
 <a href="#main">Skip</a>
-<a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
+<a href="/"><img src="/static/logo.png" alt="{{.SiteName}}" /></a>
 <a href="/{{.Name | pathescape}}">Current</a>
 <a href="/{{.Name | pathescape}}?a=revs">Rev.</a>
 </header>
@@ -44,7 +44,7 @@
 </main>
 <footer class="menu">
 <br />
-<a href="/"><img src="/logo.png?a=static" alt="{{.SiteName}}" /></a>
+<a href="/"><img src="/static/logo.png" alt="{{.SiteName}}" /></a>
 <a href="/{{.Name | pathescape}}">Current</a>
 <a href="/{{.Name | pathescape}}?a=revs">Rev.</a>
 </footer>

@@ -1,12 +1,12 @@
 body {
 	background: #eff;
-	background-image: url(/tile.png?a=static);
+	background-image: url(/static/tile.png);
 }
 
 @media (prefers-color-scheme: dark) {
 	body {
 		background: #100;
-		background-image: url(/tile-dark.png?a=static);
+		background-image: url(/static/tile-dark.png);
 		color: #bbb;
 	}
 	a:link {
