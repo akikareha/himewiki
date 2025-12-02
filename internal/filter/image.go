@@ -20,7 +20,7 @@ import (
 	"github.com/akikareha/himewiki/internal/config"
 )
 
-func imageWithChatGPT(cfg *config.Config, title string, data []byte) ([]byte, error) {
+func imageWithOpenAI(cfg *config.Config, title string, data []byte) ([]byte, error) {
 	maxLength := cfg.ImageFilter.MaxLength
 	if len(data) > maxLength {
 		return nil, fmt.Errorf("image data too long")

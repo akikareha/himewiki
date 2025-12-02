@@ -12,7 +12,7 @@ import (
 	"github.com/akikareha/himewiki/internal/format"
 )
 
-func withChatGPT(cfg *config.Config, title string, content string) (string, error) {
+func withOpenAI(cfg *config.Config, title string, content string) (string, error) {
 	apiKey := cfg.Filter.Key
 	if apiKey == "" {
 		return "", fmt.Errorf("Filter key (OpenAI API key) not set")
@@ -27,11 +27,11 @@ func withChatGPT(cfg *config.Config, title string, content string) (string, erro
 	mode := format.Detect(cfg, content)
 	var formatPrompt string
 	if mode == "creole" {
-		formatPrompt = cfg.Filter.Creole
+		formatPrompt = cfg.Prompts.Creole
 	} else if mode == "markdown" {
-		formatPrompt = cfg.Filter.Markdown
+		formatPrompt = cfg.Prompts.Markdown
 	} else {
-		formatPrompt = cfg.Filter.Nomark
+		formatPrompt = cfg.Prompts.Nomark
 	}
 
 	resp, err := client.Chat.Completions.New(
@@ -39,8 +39,8 @@ func withChatGPT(cfg *config.Config, title string, content string) (string, erro
 		openai.ChatCompletionNewParams{
 			Model: openai.ChatModelGPT4o,
 			Messages: []openai.ChatCompletionMessageParamUnion{
-				openai.SystemMessage(cfg.Filter.System + "\n" + cfg.Filter.Common + "\n" + formatPrompt),
-				openai.UserMessage(cfg.Filter.Prompt + message),
+				openai.SystemMessage(cfg.Prompts.Filter + "\n" + cfg.Prompts.Common + "\n" + formatPrompt),
+				openai.UserMessage(message),
 			},
 			Temperature: openai.Float(cfg.Filter.Temperature),
 		},

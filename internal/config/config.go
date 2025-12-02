@@ -47,13 +47,7 @@ type Config struct {
 	Filter struct {
 		Agent       string  `yaml:"agent"`
 		Key         string  `yaml:"key"`
-		System      string  `yaml:"system"`
-		Prompt      string  `yaml:"prompt"`
 		Temperature float64 `yaml:"temperature"`
-		Common      string  `yaml:"common"`
-		Nomark      string  `yaml:"nomark"`
-		Creole      string  `yaml:"creole"`
-		Markdown    string  `yaml:"markdown"`
 	} `yaml:"filter"`
 
 	ImageFilter struct {
@@ -66,12 +60,14 @@ type Config struct {
 	Gnome struct {
 		Agent       string  `yaml:"agent"`
 		Key         string  `yaml:"key"`
-		System      string  `yaml:"system"`
-		Prompt      string  `yaml:"prompt"`
 		Temperature float64 `yaml:"temperature"`
 		Ratio       int     `yaml:"ratio"`
 		Recent      int     `yaml:"recent"`
 	} `yaml:"gnome"`
+
+	PromptsPath string `yaml:"prompts-path"`
+
+	Prompts *Prompts
 }
 
 func Load(path string) *Config {
@@ -84,6 +80,8 @@ func Load(path string) *Config {
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		log.Fatalf("failed to parse config: %v", err)
 	}
+
+	cfg.Prompts = loadPrompts(cfg.PromptsPath)
 
 	return &cfg
 }

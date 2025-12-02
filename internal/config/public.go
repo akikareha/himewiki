@@ -19,13 +19,7 @@ type Public struct {
 
 	Filter struct {
 		Agent       string
-		System      string
-		Prompt      string
 		Temperature float64
-		Common      string
-		Nomark      string
-		Creole      string
-		Markdown    string
 	}
 
 	ImageFilter struct {
@@ -36,12 +30,12 @@ type Public struct {
 
 	Gnome struct {
 		Agent       string
-		System      string
-		Prompt      string
 		Temperature float64
 		Ratio       int
 		Recent      int
 	}
+
+	Prompts Prompts
 }
 
 func Publish(cfg *Config) Public {
@@ -75,22 +69,10 @@ func Publish(cfg *Config) Public {
 
 		Filter: struct {
 			Agent       string
-			System      string
-			Prompt      string
 			Temperature float64
-			Common      string
-			Nomark      string
-			Creole      string
-			Markdown    string
 		}{
 			Agent:       cfg.Filter.Agent,
-			System:      cfg.Filter.System,
-			Prompt:      cfg.Filter.Prompt,
 			Temperature: cfg.Filter.Temperature,
-			Common:      cfg.Filter.Common,
-			Nomark:      cfg.Filter.Nomark,
-			Creole:      cfg.Filter.Creole,
-			Markdown:    cfg.Filter.Markdown,
 		},
 
 		ImageFilter: struct {
@@ -105,18 +87,16 @@ func Publish(cfg *Config) Public {
 
 		Gnome: struct {
 			Agent       string
-			System      string
-			Prompt      string
 			Temperature float64
 			Ratio       int
 			Recent      int
 		}{
 			Agent:       cfg.Gnome.Agent,
-			System:      cfg.Gnome.System,
-			Prompt:      cfg.Gnome.Prompt,
 			Temperature: cfg.Gnome.Temperature,
 			Ratio:       cfg.Gnome.Ratio,
 			Recent:      cfg.Gnome.Recent,
 		},
+
+		Prompts: *cfg.Prompts,
 	}
 }

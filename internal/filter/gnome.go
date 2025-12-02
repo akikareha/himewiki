@@ -11,7 +11,7 @@ import (
 	"github.com/akikareha/himewiki/internal/format"
 )
 
-func gnomeWithChatGPT(cfg *config.Config, title string, content string) (string, error) {
+func gnomeWithOpenAI(cfg *config.Config, title string, content string) (string, error) {
 	apiKey := cfg.Gnome.Key
 	if apiKey == "" {
 		return "", fmt.Errorf("Gnome filter key (OpenAI API key) not set")
@@ -26,11 +26,11 @@ func gnomeWithChatGPT(cfg *config.Config, title string, content string) (string,
 	mode := format.Detect(cfg, content)
 	var formatPrompt string
 	if mode == "creole" {
-		formatPrompt = cfg.Filter.Creole
+		formatPrompt = cfg.Prompts.Creole
 	} else if mode == "markdown" {
-		formatPrompt = cfg.Filter.Markdown
+		formatPrompt = cfg.Prompts.Markdown
 	} else {
-		formatPrompt = cfg.Filter.Nomark
+		formatPrompt = cfg.Prompts.Nomark
 	}
 
 	resp, err := client.Chat.Completions.New(
@@ -38,8 +38,8 @@ func gnomeWithChatGPT(cfg *config.Config, title string, content string) (string,
 		openai.ChatCompletionNewParams{
 			Model: openai.ChatModelGPT4o,
 			Messages: []openai.ChatCompletionMessageParamUnion{
-				openai.SystemMessage(cfg.Gnome.System + "\n" + cfg.Filter.Common + "\n" + formatPrompt),
-				openai.UserMessage(cfg.Gnome.Prompt + message),
+				openai.SystemMessage(cfg.Prompts.Gnome + "\n" + cfg.Prompts.Common + "\n" + formatPrompt),
+				openai.UserMessage(message),
 			},
 			Temperature: openai.Float(cfg.Gnome.Temperature),
 		},
