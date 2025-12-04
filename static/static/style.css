@@ -29,19 +29,19 @@ body {
 .menu a {
 }
 
-/*@media (max-width: 768px) {*/
-	.menu a {
-		padding: 1em;
-		line-height: 3.5em;
-		background: #7777;
-		border-radius: 0.5em;
-	}
-	input[type="submit"] {
-		padding: 1em;
-		background: #7777;
-		border-radius: 0.5em;
-	}
-/*}*/
+.menu a {
+	padding: 0.5em;
+	line-height: 3.5em;
+	border-radius: 0.5em;
+	border-width: 0.5em;
+	border-style: solid;
+	border-color: #7777;
+}
+input[type="submit"] {
+	padding: 1em;
+	background: #7777;
+	border-radius: 0.5em;
+}
 
 .horizon {
 	width: 100%;
