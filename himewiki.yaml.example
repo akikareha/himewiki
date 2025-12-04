@@ -37,7 +37,7 @@ image:
 filter:
   agent: "openai"
   key: "(Your OpenAI API Key Here)"
-  temperature: 0.5
+  temperature: 0.8
 
 image-filter:
   agent: "openai"
@@ -48,7 +48,7 @@ image-filter:
 gnome:
   agent: "openai"
   key: "(Your OpenAI API Key Here)"
-  temperature: 0.5
+  temperature: 0.8
   ratio: 10
   recent: 10
 
