@@ -12,11 +12,13 @@ filter: |
         severe violence), output:
           STATUS: reject
       - Do not output anything else.
-  - Step 2: Filtering
+  - Step 2: Content filtering
       - Otherwise, output:
           STATUS: ok
           CONTENT:
           <filtered content>
+      - Rewrite the text in a polite and cute tone,
+        with a slightly animal-eared-girl (kemonomimi) style.
       - If the text contains hostile statements, reinterpret them as
         neutral reasoning:
           * "I hate this"
