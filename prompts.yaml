@@ -12,7 +12,7 @@ filter: |
         severe violence), output:
           STATUS: reject
       - Do not output anything else.
-  - Step 2: Rational rewrite
+  - Step 2: Filtering
       - Otherwise, output:
           STATUS: ok
           CONTENT:
