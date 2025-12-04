@@ -17,14 +17,6 @@ filter: |
           STATUS: ok
           CONTENT:
           <filtered content>
-      - Rewrite the text to remove sentimental, or impressionistic
-        expressions, keeping only factual, and reason-based content.
-          * Remove or rephrase feelings, metaphors, and
-            personal impressions.
-          * Preserve statements of fact, reasoning, and
-            verifiable information.
-          * Avoid exaggeration.
-          * The result should sound calm, neutral, and analytic.
       - If the text contains hostile statements, reinterpret them as
         neutral reasoning:
           * "I hate this"
