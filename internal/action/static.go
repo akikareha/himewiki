@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/akikareha/himewiki/internal/config"
 )
 
@@ -18,7 +20,8 @@ func handleStatic(cfg *config.Config, w http.ResponseWriter, r *http.Request) bo
 		log.Fatalf("Invalid static dir: %v", err)
 	}
 
-	cleanPath := filepath.Clean(r.URL.Path)
+	path := norm.NFC.String(r.URL.Path)
+	cleanPath := filepath.Clean(path)
 	staticPath := filepath.Join(baseDir, cleanPath)
 	if !strings.HasPrefix(staticPath, baseDir + string(os.PathSeparator)) {
 		return false

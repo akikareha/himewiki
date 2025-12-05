@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
 	"github.com/akikareha/himewiki/internal/templates"
@@ -17,7 +19,8 @@ func Search(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		page = 1
 	}
 
-	word := r.URL.Query().Get("w")
+	rawWord := r.URL.Query().Get("w")
+	word := norm.NFC.String(rawWord)
 	searchType := r.URL.Query().Get("t")
 	var results []string
 	if word != "" {

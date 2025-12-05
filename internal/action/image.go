@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
 	"github.com/akikareha/himewiki/internal/filter"
@@ -54,7 +56,8 @@ func Upload(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 			return
 		}
 
-		name = r.FormValue("name")
+		rawName := r.FormValue("name")
+		name = norm.NFC.String(rawName)
 		if name == "" {
 			http.Error(w, "name required", http.StatusBadRequest)
 			return

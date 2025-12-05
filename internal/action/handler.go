@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/akikareha/himewiki/internal/config"
 )
 
@@ -18,7 +20,8 @@ type Params struct {
 }
 
 func parse(cfg *config.Config, r *http.Request) Params {
-	name := strings.TrimPrefix(r.URL.Path, "/")
+	rawName := strings.TrimPrefix(r.URL.Path, "/")
+	name := norm.NFC.String(rawName)
 	if name == "" {
 		name = cfg.Wiki.Front
 	}

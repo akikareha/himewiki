@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/akikareha/himewiki/internal/config"
 	"github.com/akikareha/himewiki/internal/data"
 	"github.com/akikareha/himewiki/internal/filter"
@@ -80,7 +82,8 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 			http.Error(w, "Invalid revision ID", http.StatusInternalServerError)
 			return
 		}
-		content = r.FormValue("content")
+		rawContent := r.FormValue("content")
+		content = norm.NFC.String(rawContent)
 		preview = r.FormValue("preview")
 		save = r.FormValue("save")
 	}
