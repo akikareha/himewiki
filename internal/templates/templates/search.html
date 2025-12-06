@@ -21,23 +21,6 @@
 <main id="main">
 
 <h1>Search</h1>
-
-<div>Name Search</div>
-<form action="/?a=search" method="GET">
-<input type="hidden" name="a" value="search" />
-<input type="hidden" name="t" value="name" />
-<input type="text" name="w" value="{{.Word}}" />
-<input type="submit" value="Go" />
-</form>
-
-<div>Content Search</div>
-<form action="/" method="GET">
-<input type="hidden" name="a" value="search" />
-<input type="hidden" name="t" value="content" />
-<input type="text" name="w" value="{{.Word}}" />
-<input type="submit" value="Go" />
-</form>
-
 {{if .Word}}
 <h2>Results for "{{.Word}}"</h2>
 <ul>
@@ -53,6 +36,21 @@
 <a href="/?a=search&t={{.Type}}&w={{.Word | urlquery}}&p={{.NextPage}}">Next</a>
 </div>
 {{end}}
+<div>Name Search</div>
+<form action="/?a=search" method="GET">
+<input type="hidden" name="a" value="search" />
+<input type="hidden" name="t" value="name" />
+<input type="text" name="w" value="{{.Word}}" />
+<input type="submit" value="Go" />
+</form>
+
+<div>Content Search</div>
+<form action="/" method="GET">
+<input type="hidden" name="a" value="search" />
+<input type="hidden" name="t" value="content" />
+<input type="text" name="w" value="{{.Word}}" />
+<input type="submit" value="Go" />
+</form>
 
 </main>
 <footer class="menu">
