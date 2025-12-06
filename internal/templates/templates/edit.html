@@ -34,7 +34,11 @@
 </code></div>
 {{end}}
 
+{{if .Previewed}}
 <h1>Edit - {{.Title}}</h1>
+{{else}}
+<h1>Edit - <a href="/?a=search&t=content&w={{.SearchName | urlquery}}">{{.Title}}</a></h1>
+{{end}}
 
 <form action="/{{.Name | pathescape}}?a=edit" method="POST">
 <input type="hidden" name="previewed" value="{{.Previewed}}" />
