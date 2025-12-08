@@ -20,6 +20,7 @@ type Public struct {
 	Filter struct {
 		Agent       string
 		Temperature float64
+		TopP        float64
 	}
 
 	ImageFilter struct {
@@ -31,6 +32,7 @@ type Public struct {
 	Gnome struct {
 		Agent       string
 		Temperature float64
+		TopP        float64
 		Ratio       int
 		Recent      int
 	}
@@ -70,9 +72,11 @@ func Publish(cfg *Config) Public {
 		Filter: struct {
 			Agent       string
 			Temperature float64
+			TopP        float64
 		}{
 			Agent:       cfg.Filter.Agent,
 			Temperature: cfg.Filter.Temperature,
+			TopP:        cfg.Filter.TopP,
 		},
 
 		ImageFilter: struct {
@@ -88,11 +92,13 @@ func Publish(cfg *Config) Public {
 		Gnome: struct {
 			Agent       string
 			Temperature float64
+			TopP        float64
 			Ratio       int
 			Recent      int
 		}{
 			Agent:       cfg.Gnome.Agent,
 			Temperature: cfg.Gnome.Temperature,
+			TopP:        cfg.Gnome.TopP,
 			Ratio:       cfg.Gnome.Ratio,
 			Recent:      cfg.Gnome.Recent,
 		},

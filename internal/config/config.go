@@ -29,10 +29,10 @@ type Config struct {
 	} `yaml:"vacuum"`
 
 	Site struct {
-		Base string `yaml:"base"`
-		Name string `yaml:"name"`
+		Base   string `yaml:"base"`
+		Name   string `yaml:"name"`
 		Static string `yaml:"static"`
-		Card string `yaml:"card"`
+		Card   string `yaml:"card"`
 	} `yaml:"site"`
 
 	Wiki struct {
@@ -49,6 +49,7 @@ type Config struct {
 		Agent       string  `yaml:"agent"`
 		Key         string  `yaml:"key"`
 		Temperature float64 `yaml:"temperature"`
+		TopP        float64 `yaml:"top_p"`
 	} `yaml:"filter"`
 
 	ImageFilter struct {
@@ -62,6 +63,7 @@ type Config struct {
 		Agent       string  `yaml:"agent"`
 		Key         string  `yaml:"key"`
 		Temperature float64 `yaml:"temperature"`
+		TopP        float64 `yaml:"top_p"`
 		Ratio       int     `yaml:"ratio"`
 		Recent      int     `yaml:"recent"`
 	} `yaml:"gnome"`

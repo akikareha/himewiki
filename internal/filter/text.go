@@ -43,6 +43,7 @@ func withOpenAI(cfg *config.Config, title string, content string) (string, error
 				openai.UserMessage(message),
 			},
 			Temperature: openai.Float(cfg.Filter.Temperature),
+			TopP:        openai.Float(cfg.Filter.TopP),
 		},
 	)
 	if err != nil {

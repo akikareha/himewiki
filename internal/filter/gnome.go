@@ -42,6 +42,7 @@ func gnomeWithOpenAI(cfg *config.Config, title string, content string) (string, 
 				openai.UserMessage(message),
 			},
 			Temperature: openai.Float(cfg.Gnome.Temperature),
+			TopP:        openai.Float(cfg.Gnome.TopP),
 		},
 	)
 	if err != nil {

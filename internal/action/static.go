@@ -23,7 +23,7 @@ func handleStatic(cfg *config.Config, w http.ResponseWriter, r *http.Request) bo
 	path := norm.NFC.String(r.URL.Path)
 	cleanPath := filepath.Clean(path)
 	staticPath := filepath.Join(baseDir, cleanPath)
-	if !strings.HasPrefix(staticPath, baseDir + string(os.PathSeparator)) {
+	if !strings.HasPrefix(staticPath, baseDir+string(os.PathSeparator)) {
 		return false
 	}
 
