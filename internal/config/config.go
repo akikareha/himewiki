@@ -7,6 +7,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Link struct {
+	Key string `yaml:"key"`
+	URL string `yaml:"url"`
+}
+
 type Config struct {
 	App struct {
 		Mode string `yaml:"mode"`
@@ -71,6 +76,8 @@ type Config struct {
 	PromptsPath string `yaml:"prompts-path"`
 
 	Prompts *Prompts
+
+	Links []Link `yaml:"links"`
 }
 
 func Load(path string) *Config {

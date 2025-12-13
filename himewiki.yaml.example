@@ -55,3 +55,9 @@ gnome:
   recent: 10
 
 prompts-path: "./prompts.yaml"
+
+links:
+  - key: "Code"
+    url: "https://link.example.org/code/"
+  - key: "GitHub"
+    url: "https://link.example.org/github/"

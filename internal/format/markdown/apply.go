@@ -515,6 +515,38 @@ func link(s *state) bool {
 	return true
 }
 
+func interLink(s *state) bool {
+	line := s.input[s.index:s.lineEnd]
+	for _, item := range s.config.links {
+		if strings.HasPrefix(line, item.Key + ":") {
+			end := nonURLIndex(line[len(item.Key) + 1:])
+			rawURL := line[:len(item.Key) + 1 + end]
+
+			_, err := url.Parse(rawURL[len(item.Key) + 1:])
+			if err != nil {
+				continue
+			}
+
+			s.text.WriteString(rawURL)
+
+			s.plain.WriteString(rawURL)
+
+			htmlURL := template.HTMLEscapeString(rawURL)
+			htmlPath := template.HTMLEscapeString(rawURL[len(item.Key) + 1:])
+			s.html.WriteString("<a href=\"")
+			s.html.WriteString(item.URL)
+			s.html.WriteString(htmlPath)
+			s.html.WriteString("\" class=\"link\">")
+			s.html.WriteString(htmlURL)
+			s.html.WriteString("</a>")
+
+			s.index += len(rawURL)
+			return true
+		}
+	}
+	return false
+}
+
 func html(s *state) bool {
 	c := s.input[s.index]
 	if c == '&' {
@@ -564,6 +596,8 @@ func handleLine(s *state) {
 		} else if em(s) {
 			continue
 		} else if altEm(s) {
+			continue
+		} else if interLink(s) {
 			continue
 		} else if camel(s) {
 			continue

@@ -38,6 +38,8 @@ type Public struct {
 	}
 
 	Prompts Prompts
+
+	Links []Link
 }
 
 func Publish(cfg *Config) Public {
@@ -104,5 +106,7 @@ func Publish(cfg *Config) Public {
 		},
 
 		Prompts: *cfg.Prompts,
+
+		Links: cfg.Links,
 	}
 }

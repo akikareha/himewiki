@@ -11,11 +11,13 @@ type imageConfig struct {
 
 type formatConfig struct {
 	image imageConfig
+	links []config.Link
 }
 
 func ToFormatConfig(cfg *config.Config) formatConfig {
 	fc := formatConfig{}
 	fc.image.domains = cfg.Image.Domains
 	fc.image.extensions = cfg.Image.Extensions
+	fc.links = cfg.Links
 	return fc
 }
