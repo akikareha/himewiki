@@ -19,58 +19,31 @@
 <h1>Info</h1>
 
 <h2>Database Stats</h2>
-<p>
-BootCount = {{.Stat.BootCount}}
-</p>
-<p>
-PageSaveCount = {{.Stat.PageSaveCount}}
-</p>
-<p>
-ImageSaveCount = {{.Stat.ImageSaveCount}}
-</p>
-<p>
-Size = {{.Stat.Size}}
-</p>
-<p>
-PageCount = {{.Stat.PageCount}}
-</p>
-<p>
-RevisionCount = {{.Stat.RevisionCount}}
-</p>
-<p>
-ImageCount = {{.Stat.ImageCount}}
-</p>
-<p>
-ImageRevisionCount = {{.Stat.ImageRevisionCount}}
-</p>
+
+<div>BootCount = {{.Stat.BootCount}}</div>
+<div>PageSaveCount = {{.Stat.PageSaveCount}}</div>
+<div>ImageSaveCount = {{.Stat.ImageSaveCount}}</div>
+<div>Size = {{.Stat.Size}}</div>
+<div>PageCount = {{.Stat.PageCount}}</div>
+<div>RevisionCount = {{.Stat.RevisionCount}}</div>
+<div>ImageCount = {{.Stat.ImageCount}}</div>
+<div>ImageRevisionCount = {{.Stat.ImageRevisionCount}}</div>
 
 <h2>Configurations</h2>
 
 <h3>Site</h3>
-<p>
-Base = {{.Public.Site.Base}}
-</p>
-<p>
-Name = {{.Public.Site.Name}}
-</p>
-<p>
-Card = {{.Public.Site.Card}}
-</p>
-<p>
-<img src="{{.Public.Site.Card}}" alt="Card" />
-</p>
+<div>Base = {{.Public.Site.Base}}</div>
+<div>Name = {{.Public.Site.Name}}</div>
+<div>Card = {{.Public.Site.Card}}</div>
+<div><img src="{{.Public.Site.Card}}" alt="Card" /></div>
 
 <h3>Wiki</h3>
-<p>
-Front = {{.Public.Wiki.Front}}
-</p>
-<p>
-Format = {{.Public.Wiki.Format}}
-</p>
+<div>Front = {{.Public.Wiki.Front}}</div>
+<div>Format = {{.Public.Wiki.Format}}</div>
 
 <h3>Image</h3>
-<p>
-Domains =
+
+<div>Domains =</div>
 <ul>
 {{range .Public.Image.Domains}}
 <li>{{.}}</li>
@@ -78,9 +51,8 @@ Domains =
 <li>(none)</li>
 {{end}}
 </ul>
-</p>
-<p>
-Extensions =
+
+<div>Extensions =</div>
 <ul>
 {{range .Public.Image.Extensions}}
 <li>{{.}}</li>
@@ -88,82 +60,51 @@ Extensions =
 <li>(none)</li>
 {{end}}
 </ul>
-</p>
 
 <h3>Filter</h3>
-<p>
-Agent = {{.Public.Filter.Agent}}
-</p>
-<p>
-Temperature = {{.Public.Filter.Temperature}}
-</p>
-<p>
-TopP = {{.Public.Filter.TopP}}
-</p>
+<div>Agent = {{.Public.Filter.Agent}}</div>
+<div>Temperature = {{.Public.Filter.Temperature}}</div>
+<div>TopP = {{.Public.Filter.TopP}}</div>
 
 <h3>ImageFilter</h3>
-<p>
-Agent = {{.Public.ImageFilter.Agent}}
-</p>
-<p>
-MaxLength = {{.Public.ImageFilter.MaxLength}}
-</p>
-<p>
-MaxSize = {{.Public.ImageFilter.MaxSize}}
-</p>
+<div>Agent = {{.Public.ImageFilter.Agent}}</div>
+<div>MaxLength = {{.Public.ImageFilter.MaxLength}}</div>
+<div>MaxSize = {{.Public.ImageFilter.MaxSize}}</div>
 
 <h3>Gnome</h3>
-<p>
-Agent = {{.Public.Gnome.Agent}}
-</p>
-<p>
-Temperature = {{.Public.Gnome.Temperature}}
-</p>
-<p>
-TopP = {{.Public.Gnome.TopP}}
-</p>
-<p>
-Ratio = {{.Public.Gnome.Ratio}}
-</p>
-<p>
-Recent = {{.Public.Gnome.Recent}}
-</p>
+<div>Agent = {{.Public.Gnome.Agent}}</div>
+<div>Temperature = {{.Public.Gnome.Temperature}}</div>
+<div>TopP = {{.Public.Gnome.TopP}}</div>
+<div>Ratio = {{.Public.Gnome.Ratio}}</div>
+<div>Recent = {{.Public.Gnome.Recent}}</div>
 
-<h3>Prompts</h3>
-<p>
-Filter =
+<h2>Prompts</h2>
+
+<h3>Filter</h3>
 <pre>{{.Public.Prompts.Filter}}</pre>
-</p>
-<p>
-Common =
+
+<h3>Common</h3>
 <pre>{{.Public.Prompts.Common}}</pre>
-</p>
-<p>
-Nomark =
+
+<h3>Nomark</h3>
 <pre>{{.Public.Prompts.Nomark}}</pre>
-</p>
-<p>
-Creole =
+
+<h3>Creole</h3>
 <pre>{{.Public.Prompts.Creole}}</pre>
-</p>
-<p>
-Markdown =
+
+<h3>Markdown</h3>
 <pre>{{.Public.Prompts.Markdown}}</pre>
-</p>
-<p>
-Gnome =
+
+<h3>Gnome</h3>
 <pre>{{.Public.Prompts.Gnome}}</pre>
-</p>
+
+<h2>Configurations Part 2</h2>
 
 <h3>Links</h3>
 {{range .Public.Links}}
-<p>
-{{.Key}} = {{.URL}}
-</p>
+<div>{{.Key}} = {{.URL}}</div>
 {{else}}
-<p>
-(none)
-</p>
+<div>(none)</div>
 {{end}}
 
 </main>
