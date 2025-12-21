@@ -24,7 +24,6 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		return
 	}
 
-	tmpl := templates.New("view.html")
 	title, _, plain, rendered := format.Apply(cfg, params.DbName, content)
 	summary := format.TrimForSummary(plain, 144)
 
@@ -40,7 +39,7 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		searchName = searchName[:len(searchName)-5]
 	}
 
-	tmpl.Execute(w, struct {
+	data := struct {
 		Base       string
 		SiteName   string
 		Card       string
@@ -60,7 +59,8 @@ func View(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		SearchName: searchName,
 		Rendered:   template.HTML(rendered),
 		Diff:       diffText,
-	})
+	}
+	templates.Render(w, "view", data)
 }
 
 func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
@@ -134,8 +134,7 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Pragma", "no-cache")
 
-	tmpl := templates.New("edit.html")
-	tmpl.Execute(w, struct {
+	data := struct {
 		SiteName   string
 		Name       string
 		Previewed  bool
@@ -155,7 +154,8 @@ func Edit(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		SearchName: searchName,
 		Rendered:   template.HTML(rendered),
 		Diff:       diffText,
-	})
+	}
+	templates.Render(w, "edit", data)
 }
 
 const perBigPage = 500
@@ -173,8 +173,7 @@ func All(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Par
 		return
 	}
 
-	tmpl := templates.New("all.html")
-	tmpl.Execute(w, struct {
+	data := struct {
 		SiteName string
 		Pages    []string
 		NextPage int
@@ -182,7 +181,8 @@ func All(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Par
 		SiteName: cfg.Site.Name,
 		Pages:    pages,
 		NextPage: page + 1,
-	})
+	}
+	templates.Render(w, "all", data)
 }
 
 const perPage = 50
@@ -200,8 +200,7 @@ func Recent(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		return
 	}
 
-	tmpl := templates.New("recent.html")
-	tmpl.Execute(w, struct {
+	data := struct {
 		SiteName string
 		Records  []data.RecentRecord
 		NextPage int
@@ -209,5 +208,6 @@ func Recent(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		SiteName: cfg.Site.Name,
 		Records:  records,
 		NextPage: page + 1,
-	})
+	}
+	templates.Render(w, "recent", data)
 }

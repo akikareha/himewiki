@@ -44,8 +44,7 @@ func Search(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		searchType = "name"
 	}
 
-	tmpl := templates.New("search.html")
-	tmpl.Execute(w, struct {
+	data := struct {
 		SiteName string
 		Type     string
 		Word     string
@@ -57,5 +56,6 @@ func Search(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		Word:     word,
 		Results:  results,
 		NextPage: page + 1,
-	})
+	}
+	templates.Render(w, "search", data)
 }

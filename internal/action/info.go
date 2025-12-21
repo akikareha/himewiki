@@ -12,8 +12,7 @@ func Info(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 	stat := data.Stat()
 	public := config.Publish(cfg)
 
-	tmpl := templates.New("info.html")
-	tmpl.Execute(w, struct {
+	data := struct {
 		SiteName string
 		Stat     data.Info
 		Public   config.Public
@@ -21,5 +20,6 @@ func Info(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Pa
 		SiteName: cfg.Site.Name,
 		Stat:     stat,
 		Public:   public,
-	})
+	}
+	templates.Render(w, "info", data)
 }

@@ -27,8 +27,7 @@ func Revisions(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 		return
 	}
 
-	tmpl := templates.New("revisions.html")
-	tmpl.Execute(w, struct {
+	data := struct {
 		SiteName  string
 		Name      string
 		Title     string
@@ -40,12 +39,13 @@ func Revisions(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 		Title:     params.DbName,
 		Revisions: revs,
 		NextPage:  page + 1,
-	})
+	}
+	templates.Render(w, "revisions", data)
 }
 
 func Revert(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
 	if params.ID == nil {
-		http.Error(w, "Bad revision id", 400)
+		http.Error(w, "Bad revision id", http.StatusBadRequest)
 		return
 	}
 
@@ -65,7 +65,7 @@ func Revert(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 
 func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *Params) {
 	if params.ID == nil {
-		http.Error(w, "Bad revision id", 400)
+		http.Error(w, "Bad revision id", http.StatusBadRequest)
 		return
 	}
 
@@ -75,7 +75,6 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 		return
 	}
 
-	tmpl := templates.New("revision.html")
 	title, _, _, rendered := format.Apply(cfg, params.DbName, content)
 
 	_, current, _ := data.Load(params.DbName)
@@ -86,7 +85,7 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 		searchName = searchName[:len(searchName)-5]
 	}
 
-	tmpl.Execute(w, struct {
+	data := struct {
 		SiteName   string
 		Name       string
 		Title      string
@@ -102,5 +101,6 @@ func ViewRevision(cfg *config.Config, w http.ResponseWriter, r *http.Request, pa
 		Rendered:   template.HTML(rendered),
 		ID:         *params.ID,
 		Diff:       diffText,
-	})
+	}
+	templates.Render(w, "revision", data)
 }

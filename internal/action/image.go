@@ -88,8 +88,7 @@ func Upload(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		}
 	}
 
-	tmpl := templates.New("upload.html")
-	tmpl.Execute(w, struct {
+	data := struct {
 		Base     string
 		SiteName string
 		Name     string
@@ -97,7 +96,8 @@ func Upload(cfg *config.Config, w http.ResponseWriter, r *http.Request, params *
 		Base:     cfg.Site.Base,
 		SiteName: cfg.Site.Name,
 		Name:     name,
-	})
+	}
+	templates.Render(w, "upload", data)
 }
 
 const imagesPerPage = 200
@@ -115,8 +115,7 @@ func AllImages(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 		return
 	}
 
-	tmpl := templates.New("allimgs.html")
-	tmpl.Execute(w, struct {
+	data := struct {
 		Base     string
 		SiteName string
 		Images   []string
@@ -126,5 +125,6 @@ func AllImages(cfg *config.Config, w http.ResponseWriter, r *http.Request, param
 		SiteName: cfg.Site.Name,
 		Images:   images,
 		NextPage: page + 1,
-	})
+	}
+	templates.Render(w, "allimgs", data)
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 
@@ -20,5 +21,5 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/", action.Handler(cfg))
-	http.ListenAndServe(cfg.App.Addr, nil)
+	log.Fatal(http.ListenAndServe(cfg.App.Addr, nil))
 }
