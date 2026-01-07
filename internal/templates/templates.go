@@ -22,7 +22,7 @@ func Render(w http.ResponseWriter, name string, data any) error {
 		"pathescape": url.PathEscape,
 		"fmtdiff":    formatDiff,
 	}
-	t := template.Must(template.New(name).Funcs(funcMap).ParseFS(tmplFS, "templates/"+name+".html"))
+	t := template.Must(template.New(name+".html").Funcs(funcMap).ParseFS(tmplFS, "templates/"+name+".html"))
 	err := t.Execute(w, data)
 	if err != nil {
 		http.Error(w, "Failed to process template", http.StatusInternalServerError)
